@@ -17,9 +17,13 @@
 *{box-sizing:border-box} html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#a2def7;overscroll-behavior:none}
 body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none}
 button,input,select{font:inherit} button{cursor:pointer;-webkit-tap-highlight-color:transparent}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #764fc3;outline-offset:3px}
-#background{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0;background:linear-gradient(180deg,#77d9ff 0%,#b2eaff 38%,#ffe3b4 83%,#f8cba8 100%)}
-#background:before{content:"";position:absolute;left:-40%;top:-14%;width:180%;height:86%;background:radial-gradient(ellipse at center,rgba(255,255,255,.47),transparent 70%);pointer-events:none}
-.sun{position:absolute;width:125px;height:125px;right:-38px;top:10%;border-radius:50%;background:radial-gradient(circle at 36% 32%,#fffadd,#ffe6a1 67%,#ffc87c);box-shadow:0 0 0 23px #fff5c23a,0 0 0 65px #fff9ce16,0 0 70px #fff7c6b0}
+#background{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0;background:linear-gradient(180deg,var(--sky-top,#77d9ff) 0%,var(--sky-middle,#b2eaff) 50%,var(--sky-horizon,#ffe3b4) 100%)}
+#background:before{content:"";position:absolute;left:-40%;top:-14%;width:180%;height:86%;background:radial-gradient(ellipse at center,rgba(255,255,255,.47),transparent 70%);opacity:var(--sky-glow,1);pointer-events:none}
+.sun{position:absolute;width:125px;height:125px;left:var(--sun-x,78%);top:var(--sun-y,10%);transform:translate(-50%,-50%);opacity:var(--sun-opacity,1);border-radius:50%;background:radial-gradient(circle at 36% 32%,#fffadd,#ffe6a1 67%,#ffc87c);box-shadow:0 0 0 23px #fff5c23a,0 0 0 65px #fff9ce16,0 0 70px #fff7c6b0}
+.moon{position:absolute;left:var(--moon-x,50%);top:var(--moon-y,16%);width:clamp(36px,13vw,68px);aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%);opacity:var(--moon-opacity,0);background:radial-gradient(circle at 36% 32%,#fffdeb,#dce7ff 70%,#aebee7);box-shadow:0 0 34px #cbdbff8c}
+.stars{position:absolute;inset:0 0 44%;opacity:var(--star-opacity,0)}
+.star{position:absolute;width:var(--size);aspect-ratio:1;border-radius:50%;background:#fff8d7;box-shadow:0 0 5px #e3efff}
+.night-tint{position:absolute;inset:0;background:linear-gradient(180deg,#141d4b26,#111a48b0);opacity:var(--night-opacity,0)}
 .mountain{position:absolute;width:170%;height:26%;left:-35%;bottom:12%;border-radius:50% 50% 0 0/100% 100% 0 0;background:linear-gradient(180deg,#c7eab9,#a6d8a0);opacity:.62}
 .mountain.second{left:25%;width:125%;bottom:8%;height:20%;background:#88c8a4;opacity:.40}
 .track{position:absolute;left:0;display:flex;width:1800px;pointer-events:none;will-change:transform;transform:translate3d(0,0,0)}.tile{flex:0 0 900px;width:900px;overflow:hidden}.tile svg{display:block;width:100%;height:100%}
@@ -78,34 +82,60 @@ button,input,select{font:inherit} button{cursor:pointer;-webkit-tap-highlight-co
 .control-panel{min-height:99px;gap:15px}.mic{width:97px;height:97px;border-radius:35px}.mic svg{width:48px;height:48px}.feed,.sleep{width:65px;height:65px}
 #appUI #petName{display:none}
 @media(max-height:720px){.zodiac-item{flex-basis:49px;width:49px;height:48px;font-size:26px}.zodiac-strip{padding:5px 8px 7px;gap:7px}.control-panel{min-height:78px}.mic{width:76px;height:76px;border-radius:28px}.feed,.sleep{width:54px;height:54px;border-radius:20px}.feed svg{width:41px;height:41px}.mic svg{width:37px;height:37px}}
+#zodiacStrip{width:min(100%,430px);gap:2px;padding:5px 5px 7px;border-radius:20px}
+#zodiacStrip .zodiac-item{flex:1 0 30px;width:auto;height:44px;border-radius:13px;font-size:clamp(17px,5vw,24px)}
+#zodiacStrip .zodiac-item.active{transform:translateY(-1px)}
+#zodiacStrip .zodiac-item.active:after{top:-4px;right:0;font-size:11px}
+.control-panel{display:grid;grid-template-columns:1fr auto 1fr;gap:clamp(8px,3vw,18px);max-width:430px;min-height:0;align-items:center;pointer-events:none}
+.action-group{display:grid;grid-template-columns:repeat(2,minmax(44px,1fr));gap:6px;width:min(100%,122px);align-items:center}
+#foodTray{justify-self:end}
+#toyTray{justify-self:start}
+.control-panel button{pointer-events:auto}
+.action-group button{display:grid;place-items:center;width:100%;height:46px;padding:0;border:2px solid #fff;border-radius:16px;background:#fff4df;box-shadow:0 4px 0 #c9897840;font-size:24px;line-height:1}
+.action-group #feedBtn{grid-row:2;grid-column:2;background:linear-gradient(155deg,#ffe4a4,#ffaf7b)}
+.action-group #sleepBtn{grid-row:2;grid-column:1;background:linear-gradient(155deg,#dce1ff,#b5bbf4)}
+.action-group button:active{transform:scale(.94)}
+.action-group .feed svg{width:34px;height:34px}
+.control-panel .mic{width:clamp(76px,23vw,96px);height:clamp(76px,23vw,96px)}
+@media(max-width:340px){.bottom{padding-inline:8px}.action-group{gap:4px}}
+@media(max-height:720px){.action-group button{height:44px}.control-panel .mic{width:76px;height:76px}}
+
+#playNotice{position:absolute;bottom:100%;max-width:90%;padding:6px 12px;border-radius:16px;background:#fff8ec;color:#634c68;text-align:center;font-size:13px;pointer-events:none}
+#playNotice:empty{display:none}
+#pinwheel{position:absolute;right:-9px;top:-9px;font-size:29px;line-height:1;pointer-events:none}
 </style>
 </head>
 <body>
 <div id="background" aria-hidden="true">
-  <div class="sun"></div><div class="mountain"></div><div class="mountain second"></div>
+  <div id="skyStars" class="stars"></div><div class="sun"></div><div class="moon"></div><div class="mountain"></div><div class="mountain second"></div>
   <div id="cloudTrack" class="track"></div>
   <div id="shrubTrack" class="track"></div>
   <div id="petalTrack" class="track"></div>
+  <div class="night-tint"></div>
 </div>
 <canvas id="c" aria-label="Thú cưng 3D, chạm đầu, bụng hoặc kéo đuôi"></canvas>
 <div id="veil"></div>
 <div id="appUI">
   <div class="topbar">
     <div class="brand brand-simple" aria-label="Bạn Thú AI"><span class="brand-icon" aria-hidden="true">🌈</span><span id="petName" class="sr-only">Mèo Mimi</span></div>
-    <button id="changePet" class="icon-btn" aria-label="Đổi sang con giáp tiếp theo" title="Đổi thú cưng">🐭</button>
     <button id="settingsBtn" class="icon-btn" aria-label="Cài đặt của phụ huynh" title="Cài đặt">⚙</button>
   </div>
   <div id="bubble" class="sr-only" aria-live="polite"></div>
   <div class="bottom">
     <nav id="zodiacStrip" class="zodiac-strip" aria-label="Chọn con giáp"></nav>
+    <div id="playNotice" role="status"></div>
     <div class="control-panel">
-      <button id="feedBtn" class="feed" aria-label="Thả cá cho thú cưng ăn" title="Cho ăn">
-        <svg viewBox="0 0 100 100" role="img" aria-label="Cá cam sọc trắng"><path d="M19 52 4 30v44z" fill="#ff8a36" stroke="#e66c21" stroke-width="3"/><path d="M17 51c12-24 42-31 71 0-26 30-58 24-71 0z" fill="#ff8a36" stroke="#ee6c23" stroke-width="3"/><path d="M37 29c8-4 13-4 19-1-6 16-6 30 1 47-7 2-13 0-20-4 8-14 9-29 0-42z" fill="#fff8e9"/><path d="M67 35c5 3 8 6 11 10-4 8-4 15 0 20-4 4-7 6-11 8 3-12 3-27 0-38z" fill="#fff8e9"/><circle cx="74" cy="46" r="5" fill="#2d2e43"/><circle cx="76" cy="44" r="1.8" fill="#fff"/><path d="m52 28 2-12 16 17" fill="#ff6b30"/></svg>
-      </button>
+      <div id="foodTray" class="action-group" role="group" aria-label="Đồ ăn">
+        <button id="feedBtn" class="feed" aria-label="Thả cá cho thú cưng ăn" title="Cho ăn">
+          <svg viewBox="0 0 100 100" role="img" aria-label="Cá cam sọc trắng"><path d="M19 52 4 30v44z" fill="#ff8a36" stroke="#e66c21" stroke-width="3"/><path d="M17 51c12-24 42-31 71 0-26 30-58 24-71 0z" fill="#ff8a36" stroke="#ee6c23" stroke-width="3"/><path d="M37 29c8-4 13-4 19-1-6 16-6 30 1 47-7 2-13 0-20-4 8-14 9-29 0-42z" fill="#fff8e9"/><path d="M67 35c5 3 8 6 11 10-4 8-4 15 0 20-4 4-7 6-11 8 3-12 3-27 0-38z" fill="#fff8e9"/><circle cx="74" cy="46" r="5" fill="#2d2e43"/><circle cx="76" cy="44" r="1.8" fill="#fff"/><path d="m52 28 2-12 16 17" fill="#ff6b30"/></svg>
+        </button>
+      </div>
       <button id="micBtn" class="mic" aria-label="Giữ để nói tiếng Việt" title="Giữ nút này để nói">
-        <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="18" y="6" width="12" height="26" rx="6"/><path d="M11 23c0 18 26 18 26 0M24 37v6M16 43h16"/></svg><span id="micStatus" class="sr-only">Giữ để nói</span>
+        <svg viewBox="0 0 48 48" aria-hidden="true"><rect x="18" y="6" width="12" height="26" rx="6"/><path d="M11 23c0 18 26 18 26 0M24 37v6M16 43h16"/></svg><span id="pinwheel" hidden aria-hidden="true">🌸</span><span id="micStatus" class="sr-only">Giữ để nói</span>
       </button>
-      <button id="sleepBtn" class="sleep" aria-label="Cho thú cưng đi ngủ" title="Đi ngủ">💤</button>
+      <div id="toyTray" class="action-group" role="group" aria-label="Ngủ và chơi">
+        <button id="sleepBtn" class="sleep" aria-label="Cho thú cưng đi ngủ" title="Đi ngủ">💤</button>
+      </div>
     </div>
   </div>
 </div>
@@ -127,6 +157,9 @@ button,input,select{font:inherit} button{cursor:pointer;-webkit-tap-highlight-co
     </div>
     <div id="debugInfo" class="notice">Chỉ số FPS hiển thị ở đây khi ứng dụng đang chạy.</div>
     <div class="notice">🔒 Chỉ nên dùng API key trực tiếp để thử trên máy cá nhân; không nhúng khóa vào bản phát hành. iOS Chrome / PWA có thể không hỗ trợ nhận dạng giọng nói trên trình duyệt: khi chọn Gemini có khóa, ứng dụng dùng ghi âm tối đa 8 giây và gửi audio qua REST (tốn nhiều token hơn text). Với Safari, ưu tiên nhận dạng giọng nói của trình duyệt. Micro cần HTTPS và quyền truy cập.</div>
+    <label for="micMode">Trò chơi micro</label>
+    <select id="micMode"><option value="talk">Trò chuyện</option><option value="echo">Giọng nhại (3 giây)</option><option value="blow">Thổi chong chóng</option></select>
+    <div class="setting-actions"><button type="button" id="motionBtn">Bật nghiêng và lắc máy</button></div>
     <div class="setting-actions"><button id="cancelSettings" class="cancel">Đóng</button><button id="saveSettings">Lưu cài đặt</button></div>
   </div>
 </div>
@@ -946,7 +979,7 @@ const ANIMS = {
   wave:   A(1.6, { sfx: [[.1, 'meow']], tr: { 'armR.rz': (t, p) => (2.4 + .4 * sn(t, 4)) * E(p, .15, .2), 'head.rz': (t, p) => .1 * E(p), 'mouth.sy': (t, p) => 1 + 2 * E(p) } }),
   jump:   A(.9, { sfx: [[0, 'boing']], tr: { 'root.py': (t, p) => 1.3 * Math.sin(Math.PI * p), 'root.sy': (t, p) => 1 + .08 * Math.sin(Math.PI * p),
     'armL.rz': (t, p) => -1.8 * E(p), 'armR.rz': (t, p) => 1.8 * E(p) } }),
-  spin:   A(1, { sfx: [[0, 'boing']], tr: { 'root.ry': (t, p) => TAU * p * p * (3 - 2 * p), 'root.py': (t, p) => .3 * Math.sin(Math.PI * p) } }),
+  spin:   A(1, { sfx: [[0, 'cheer']], tr: { 'root.ry': (t, p) => TAU * p * p * (3 - 2 * p), 'root.py': (t, p) => .3 * Math.sin(Math.PI * p) } }),
 
   // ---- Phản ứng chạm (pri 3) ----
   purr:   A(2.6, { pri: 3, fx: [[.1, 'hearts'], [1, 'hearts'], [1.8, 'hearts']], sfx: [[0, 'purr']], tr: {   // nheo mắt gừ gừ
@@ -974,7 +1007,28 @@ const ANIMS = {
     'legR.rx': (t, p) => -1.1 * E(p, .1, .1), 'root.py': (t, p) => .4 * hop(t, 2.5) * E(p, .1, .1), 'root.rz': (t, p) => .12 * sn(t, 1.25) * E(p),
     'armL.rz': (t, p) => -.9 * E(p), 'armR.rz': (t, p) => .9 * E(p), 'mouth.sy': (t, p) => 1 + 3 * E(p), 'tail.rz': t => .4 * sn(t, 2.5) } })
 };
+Object.assign(ANIMS, {
+  stumble: A(1.65, { pri: 3, tr: {
+    'root.px': (t,p) => .48 * E(p), 'root.py': (t,p) => .32 * hop(t, 2.2) * E(p),
+    'root.rz': (t,p) => .27 * sn(t, 2.2) * E(p), 'head.rz': (t,p) => .24 * sn(t, 1.7) * E(p)
+  } }),
+  bounce: A(.85, { pri: 3, tr: {
+    'root.py': (t,p) => .85 * Math.sin(Math.PI * p), 'root.sy': (t,p) => 1 + .09 * E(p),
+    'root.rx': (t,p) => -.23 * E(p)
+  } }),
+  breeze: A(1.5, { pri: 3, tr: {
+    'root.rz': (t,p) => .09 * sn(t, 3) * E(p), 'head.ry': (t,p) => .23 * E(p),
+    'earL.rz': (t,p) => .34 * sn(t, 6) * E(p), ...eyes('sy', (t,p) => 1 - .7 * E(p))
+  } }),
+  sneeze: A(1.3, { pri: 3, sfx: [[.4, 'sneeze']], tr: {
+    'root.rx': (t,p) => .17 * sn(t, 1.8) * E(p),
+    'head.rx': (t,p) => .4 * sn(t, 1.8) * E(p), ...eyes('sy', (t,p) => 1 - .9 * E(p))
+  } })
+});
+ANIMS.purr.tr['root.rz'] = (t,p) => .04 * sn(t, .9) * E(p);
+ANIMS.wake.tr['root.py'] = (t,p) => .25 * Math.sin(Math.PI * p);
 function sm(x) { x = clamp(x); return x * x * (3 - 2 * x); }
+const NO_EVENTS = [];
 const EVENTS = {};  // gộp fx + sfx thành 1 danh sách sự kiện theo thời gian
 for (const n in ANIMS) { const a = ANIMS[n]; EVENTS[n] = [...a.fx.map(e => [e[0], 'fx', e[1]]), ...a.sfx.map(e => [e[0], 'sfx', e[1]])].sort((x, y) => x[0] - y[0]); }
 
@@ -988,10 +1042,10 @@ function ctx() {
   if (ax.state !== 'running') ax.resume(); return ax;
 }
 // Giọng: dao động qua bộ lọc, tần số đi theo đường fs[], có thể trễ `at` giây
-function voice(fs, dur, vol = .4, type = 'sawtooth', cut = 2200, at = 0) {
+function voice(fs, dur, vol = .4, type = 'sawtooth', cut = 2200, at = 0, tuning = pitch) {
   const a = ctx(), t = a.currentTime + at, o = a.createOscillator(), f = a.createBiquadFilter(), g = a.createGain();
-  o.type = type; f.type = 'lowpass'; f.frequency.value = cut; o.frequency.setValueAtTime(fs[0] * pitch, t);
-  fs.forEach((x, i) => i && o.frequency.linearRampToValueAtTime(x * pitch, t + dur * i / (fs.length - 1)));
+  o.type = type; f.type = 'lowpass'; f.frequency.value = cut; o.frequency.setValueAtTime(fs[0] * tuning, t);
+  fs.forEach((x, i) => i && o.frequency.linearRampToValueAtTime(x * tuning, t + dur * i / (fs.length - 1)));
   g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol, t + Math.min(.04, dur / 4)); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
   o.connect(f); f.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .02);
 }
@@ -1006,6 +1060,11 @@ function noise(dur, type, freq, vol, at = 0, lfo = 0) {
 const AUDIO_API = { voice, noise };  // truyền cho registry để nhân vật tự định nghĩa SFX riêng
 const SFX = {
   meow: () => voice([520, 900, 640, 420], .7, .35, 'sawtooth', 1800),
+  breeze: () => noise(.65, 'bandpass', 1250, .24),
+  sneeze: () => { voice([410, 920], .16, .2); noise(.33, 'bandpass', 2100, .38, .14); },
+  drum: () => { voice([200, 62], .26, .4, 'sine'); noise(.09, 'lowpass', 750, .3); },
+  crunch: () => { noise(.11, 'highpass', 2100, .32); noise(.07, 'bandpass', 1150, .36, .08); },
+  sip: () => voice([520, 680, 360], .2, .16, 'sine'),
   purr: () => noise(2.4, 'lowpass', 280, .8, 0, 25),
   giggle: () => { for (let i = 0; i < 7; i++) voice([800 + (i % 2) * 250, 1000], .09, .25, 'triangle', 3000, i * .12); },
   yelp: () => voice([1300, 2300, 900], .4, .35, 'square', 2800),
@@ -1021,14 +1080,21 @@ const SFX = {
   chirp: () => voice([700, 1100], .15, .22, 'sine')
 };
 
-function animalCall(){
-  const kind=cfg?.procedural?.kind||'cat';
-  const v=(f,d=.3,vol=.22,type='triangle',cut=1900,delay=0)=>voice(f,d,vol,type,cut,delay);
+let activeSpecies;
+const lastCalls = new Map();
+function callAnimal(kind = activeSpecies, zone, preview = false) {
+  if (!ax || !kind || (preview && ax.state !== 'running')) return;
+  const now = ax.currentTime, previous = lastCalls.get(kind);
+  const cooldown = zone === 'select' ? 0 : previous?.zone === zone ? .48 : .14;
+  if (previous && now - previous.time < cooldown) return;
+  lastCalls.set(kind, { time: now, zone });
+  const tuning = (CHARS[kind]?.voice?.pitch || 1) * ({head:1.08, chin:1.04, belly:.91, side:.91, tail:1.13, feet:1.18}[zone] || 1);
+  const v=(f,d=.3,vol=.22,type='triangle',cut=1900,delay=0)=>voice(f,d,vol,type,cut,delay,tuning);
   switch(kind){
     case 'rat':v([1150,1650,1500],.13,.18,'sine',3300);v([1550,2100,1800],.12,.18,'sine',3400,.18);break;
     case 'buffalo':v([165,115,150],.72,.29,'sawtooth',650);v([115,88],.30,.20,'sawtooth',460,.6);break;
     case 'tiger':v([260,170,230,115],.62,.26,'sawtooth',820);noise(.42,'lowpass',500,.20);break;
-    case 'cat':SFX.meow();break;
+    case 'cat':v([520, 900, 640, 420], .7, .35, 'sawtooth', 1800);break;
     case 'dragon':v([260,700,320],.62,.26,'sawtooth',1450);v([180,510,300],.38,.15,'triangle',2200,.22);break;
     case 'snake':noise(.58,'highpass',3700,.24);v([680,550],.22,.11,'sine',1500,.08);break;
     case 'horse':v([410,960,560,840,420],.88,.24,'sawtooth',1650);break;
@@ -1040,9 +1106,8 @@ function animalCall(){
     default:SFX.chirp();
   }
 }
-let lastCall=-1e9;
 function playSfx(n) {                 // ưu tiên SFX riêng của nhân vật (hàm hoặc URL), rồi tới SFX tổng hợp
-  if (!ax) return; if(n==='animal'||n==='meow'){if(ax.currentTime-lastCall<.26)return;lastCall=ax.currentTime;animalCall();return;} const o = cfg && cfg.sfx && cfg.sfx[n];
+  if (!ax) return; if(n==='animal'||n==='meow'){callAnimal();return;} const o = cfg && cfg.sfx && cfg.sfx[n];
   if (typeof o === 'string') new Audio(o).play().catch(() => {}); else if (typeof o === 'function') o(AUDIO_API); else if (SFX[n]) SFX[n]();
 }
 
@@ -1050,7 +1115,7 @@ function playSfx(n) {                 // ưu tiên SFX riêng của nhân vật 
 const HAPPY = new Set(['celebrate', 'purr', 'wave', 'jump', 'spin', 'eat', 'feetHop', 'laugh']);
 const F = { sleeping: false, listening: false, speaking: false };   // cờ trạng thái nền
 const H = {};                                                        // hooks gắn từ ngoài: hold, holdEnd, pause, resume
-let renderer, scene, camera, wrapper, cfg, CHARS, rig = null, T = 0, lastActive = 0, lastYawn = 0, nextBlink = 2, blinkT = 9, nextZ = 0, lipBoost = 0, analyser = null, yR = [0, 3.4];
+let renderer, scene, camera, wrapper, cfg, CHARS, rig = null, T = 0, lastActive = 0, lastYawn = -20, nextBlink = 2, blinkT = 9, nextZ = 0, lipBoost = 0, analyser = null, yR = [0, 3.4];
 let layers = [];
 const rest = () => F.sleeping ? 'sleep' : F.listening ? 'listen' : F.speaking ? 'speak' : 'idle';
 const top = () => layers[layers.length - 1];
@@ -1063,9 +1128,62 @@ function go(name, force) {
   layers.push({ n: name, a, c: rig.comp[name], t: 0, w: layers.length ? .01 : 1, i: 0, cyc: 0 }); if (layers.length > 4) layers.shift();
 }
 function set(k, v) { F[k] = v; if (rig && (v || (top() && top().a.loop))) go(rest(), true); }
-function poke() { lastActive = T; }
-function wake() { if (F.sleeping) { F.sleeping = false; go('wake', true); } poke(); }
+function poke() { lastActive = T; lastYawn = T - 20; }
+function wake() {
+  const sleeping = F.sleeping;
+  if (sleeping) { F.sleeping = false; feedback('wake', 'chirp', 'shock'); }
+  poke();
+  return sleeping;
+}
 function react(anim) { poke(); go(anim, true); }
+
+let tilt = 0, tiltPose = 0, meal = null;
+function locateHead() {
+  const B = rig.bones;
+  if (B.head) B.head.getWorldPosition(_hp);
+  else B.root.localToWorld(_hp.set(0, yR[1] / (cfg.scale || 1) * .68, 0));
+}
+function feedback(animation, sound, effect, skipSound = false, impact = true) {
+  if (!rig) return;
+  F.sleeping = false;
+  react(animation);
+  const layer = top();
+  if (skipSound) layer.skipSound = sound;
+  if (sound) playSfx(sound);
+  locateHead();
+  if (effect) FX[effect]();
+  if (!impact) return;
+  try {
+    const bridge = window.webkit?.messageHandlers?.petImpact;
+    if (bridge) bridge.postMessage('light');
+    else navigator.vibrate?.(12);
+  } catch { /* Haptics are optional. */ }
+}
+function serve(food) {
+  if (!rig) return;
+  if (fish?.active) { fish.active = false; fish.g.visible = false; }
+  if (meal) meal.icon.age = meal.icon.life;
+  feedback('eat', food.sound);
+  meal = { food, layer: top(), next: .34 };
+  const icon = puff(food.icon, _hp.x, _hp.y - .42, _hp.z + 1, 2.72, .72, q => {
+    q.s.position.set(_hp.x, _hp.y - .42 + .05 * sn(q.age, food.rhythm), _hp.z + 1);
+  });
+  meal.icon = icon;
+}
+function updateMeal(layer) {
+  if (!meal) return;
+  const { food, icon } = meal;
+  if (layer !== meal.layer) { icon.age = icon.life; meal = null; return; }
+  if (layer.t >= meal.next && layer.t < 2.7) {
+    playSfx(food.sound);
+    meal.next += 1.6 / food.rhythm;
+  }
+  if (layer.t >= 2.7) {
+    meal = null;
+    feedback(food.finish, food.ending, food.effect, true, false);
+    H.foodDone?.(food);
+  }
+}
 
 /* ================= RIG: biên dịch track -> kênh theo xương hiện có ================= */
 function makeRig(bones, eyeMat, morphs) {
@@ -1093,19 +1211,24 @@ function update(dt) {
     L.t += dt; const d = L.a.dur;
     if (L.a.loop) { const c = Math.floor(L.t / d); if (c > L.cyc) { L.cyc = c; if (L.a.rep) L.i = 0; } }
     L.w = clamp(L.w + (L === tp ? dt : -dt) / .22);                     // crossfade ~0.22s
-    if (L === tp) { const ev = EVENTS[L.n], tm = L.t - L.cyc * d; while (L.i < ev.length && ev[L.i][0] <= tm) { const e = ev[L.i++]; e[1] === 'fx' ? FX[e[2]] && FX[e[2]]() : playSfx(e[2]); } }
+    if (L === tp) { const ev = L === meal?.layer ? NO_EVENTS : EVENTS[L.n], tm = L.t - L.cyc * d; while (L.i < ev.length && ev[L.i][0] <= tm) { const e = ev[L.i++]; e[1] === 'fx' ? FX[e[2]] && FX[e[2]]() : e[2] !== L.skipSound && playSfx(e[2]); } }
   }
   if (!tp.a.loop && tp.t >= tp.a.dur) go(rest(), true);
   const idle = T - lastActive;
   if (tp.n === 'idle' && idle > 10 && T - lastYawn > 20) { lastYawn = T; go('yawn'); }                         // ngáp sau 10s
-  if (idle > 60 && !F.sleeping && !F.listening && !F.speaking) { F.sleeping = true; go('sleep', true); }      // ngủ sau 60s
+  if (idle >= 13 && tp.n === 'idle' && !F.sleeping && !F.listening && !F.speaking) { F.sleeping = true; go('sleep', true); }      // ngủ sau 60s
   layers = layers.filter(L => L === top() || L.w > .01);
   // --- Trộn pose: final = rest + Σ w·(giá trị − mặc định) / Σ w ---
   const acc = rig.acc, CH = rig.CH; acc.fill(0); let sw = 0;
   for (const L of layers) {
     sw += L.w; if (L.w <= 0) continue;
     const c = L.c, p = L.a.loop ? (L.t % L.a.dur) / L.a.dur : Math.min(1, L.t / L.a.dur);
-    for (let j = 0; j < c.ci.length; j++) acc[c.ci[j]] += L.w * (c.fn[j](L.t, p) - CH[c.ci[j]].def);
+    for (let j = 0; j < c.ci.length; j++) {
+      const channel = CH[c.ci[j]];
+      const turn = channel.o === B.root && channel.kind === 'r' && channel.ax === 'y';
+      const value = c.fn[j](L.t, p);
+      acc[c.ci[j]] += L.w * (value - (turn && L !== top() && value >= TAU - .001 ? TAU : 0) - channel.def);
+    }
   }
   sw = sw || 1;
   for (let i = 0; i < CH.length; i++) {
@@ -1113,6 +1236,14 @@ function update(dt) {
     if (h.kind === 'g') h.o.glow = d; else if (h.kind === 's') h.o.scale[h.ax] = h.rest * (1 + d); else if (h.kind === 'p') h.o.position[h.ax] = h.rest + d; else h.o.rotation[h.ax] = h.rest + d;
   }
   // --- Lớp bổ trợ thủ tục (additive): thở, chớp mắt, vẫy đuôi, giật tai, lip-sync ---
+  tiltPose += (tilt - tiltPose) * Math.min(1, dt * 8);
+  B.root.rotation.z += tiltPose;
+  if (meal?.layer === tp) {
+    const chew = hop(tp.t, meal.food.rhythm);
+    B.root.scale.y *= 1 - .024 * chew;
+    if (B.head) B.head.rotation.x += .11 * chew;
+    if (B.mouth) B.mouth.scale.y *= .58 + .62 * chew;
+  }
   B.root.scale.y *= 1 + .012 * Math.sin(T * (F.sleeping ? 1.2 : 2.2));
   if (T > nextBlink) { blinkT = 0; nextBlink = T + 2 + Math.random() * 3.5; }
   blinkT += dt;
@@ -1135,11 +1266,12 @@ function update(dt) {
     else amp = clamp((.15 + .85 * Math.abs(Math.sin(T * Math.PI * 5.5))) * (.5 + .4 * Math.abs(Math.sin(T * 3.1))) * (.6 + .4 * lipBoost));   // sóng âm tiết giả lập ~5.5 âm tiết/giây
     if (B.mouth && tp.n === 'speak') B.mouth.scale.y = rig.mouthRest * (1 + 9 * amp);
   }
-  rig.morphs.forEach(m => m.mesh.morphTargetInfluences[m.i] = amp);       // blendshape cho model .glb
+  rig.morphs.forEach(m => m.mesh.morphTargetInfluences[m.i] = meal?.layer === tp ? .65 * hop(tp.t, meal.food.rhythm) : amp);       // blendshape cho model .glb
   if (F.speaking && B.head) { B.head.rotation.x += .07 * lipBoost; if (B.earL) { B.earL.rotation.z += .1 * lipBoost; if(B.earR) B.earR.rotation.z -= .1 * lipBoost; } }   // gật đầu + giật tai theo nhịp từ
   updateFish(dt);
   // --- FX ---
-  B.head && B.head.getWorldPosition(_hp);
+  locateHead();
+  updateMeal(tp);
   if (F.sleeping && T > nextZ) { FX.zzz(); nextZ = T + 1.1; }
   for (let i = parts.length - 1; i >= 0; i--) {
     const q = parts[i]; q.age += dt; const k = q.age / q.life;
@@ -1170,6 +1302,10 @@ const FX = {
   zzz: () => puff('💤', _hp.x + .6, _hp.y + .8, _hp.z + .3, 2.4, .55, (q, dt) => { q.s.position.y += dt * .5; q.s.position.x += dt * .2; }),
   confetti: () => { for (let i = 0; i < 14; i++) { const q = puff(['🎉', '✨', '🎊', '⭐'][i % 4], _hp.x, _hp.y + .5, _hp.z + .5, 1.8, .5, (q, dt) => { q.v.y -= dt * 3; q.s.position.addScaledVector(q.v, dt); });
     q.v = new THREE.Vector3((Math.random() - .5) * 4, 2 + Math.random() * 2, Math.random() * 2); } },
+  wind: () => puff('💨?', _hp.x - .65, _hp.y + .15, _hp.z + 1, 1.15, .8,
+    (q, dt) => { q.s.position.x += dt * 2; }),
+  fire: () => puff('🔥?', _hp.x, _hp.y - .35, _hp.z + 1, 1.1, .8,
+    (q, dt) => { q.s.position.z += dt * 2; q.s.position.y += dt * .5; }),
   food: () => puff('🐟', 0, 0, 0, 3.1, 1.1, q => { q.s.position.set(_hp.x, _hp.y - .55, _hp.z + 1.2);
     q.s.scale.setScalar(q.sz * (1 - .85 * q.age / q.life) * (1 + .08 * Math.sin(q.age * 22))); }, true)
 };
@@ -1343,7 +1479,7 @@ function buildSnake(c){
     add(sphere,new THREE.MeshBasicMaterial({color:0xffffff}),e,[-.045,.072,.161],[.042,.040,.014]);
     add(sphere,dark,head,[s*.18,-.17,1.02],[.06,.035,.022],'head');
   }
-  const mouth=G('mouth',head,[0,-.33,.81],'head');mouth.scale.set(1,.15,.5);
+  const mouth=G('mouth',head,[0,-.33,.81],'chin');mouth.scale.set(1,.15,.5);
   add(sphere,dark,mouth,[0,0,0],[.23,.15,.10]);
   add(new THREE.ConeGeometry(.12,.40,6),pink,head,[0,-.54,.96],[1,1,.3],'head').rotation.x=Math.PI;
   const tail=G('tail',R,[.65,.6,-.65],'tail');
@@ -1380,7 +1516,7 @@ function buildProcedural(c) {
   // mũi ẩm: chó = đen to; mèo = hồng nhỏ hình tam giác
   if (dog || ['horse','buffalo','goat'].includes(k)) mesh(sph(.16), wet(0x292122), head, 0, -.08, k==='horse'?1.55:1.4, 'head', [1.4, .75, .9]);
   else mesh(new THREE.ConeGeometry(.09, .1, 16), wet(0xff9aa8), head, 0, -.04, .93, 'head', [1, 1, .7]).rotation.x = Math.PI;
-  const mo = grp('mouth', head, 0, dog ? -.38 : -.3, dog ? 1.33 : .86); mo.scale.set(1, .1, .4); mesh(sph(.15), M(0x5a1a1a), mo, 0, 0, 0, 'head', null, false);
+  const mo = grp('mouth', head, 0, dog ? -.38 : -.3, dog ? 1.33 : .86); mo.scale.set(1, .1, .4); mesh(sph(.15), M(0x5a1a1a), mo, 0, 0, 0, 'chin', null, false);
   if (dog) { const tg = grp('tongue', head, 0, -.4, 1.3); mesh(sph(.1), M(0xff7a96), tg, 0, -.1, -.02, 'head', [.9, 1.4, .5], false); tg.scale.y = .3; }   // lưỡi thè
   // Đốm má, mảng ngực mềm và chấm râu tăng độ nhận diện ở cỡ màn hình điện thoại.
   mesh(sph(.50), lite, B.body, 0, .08, .73, 'belly', [.95, .93, .43], false);
@@ -1509,6 +1645,7 @@ function buildProcedural(c) {
 let loadSequence=0;
 async function load(key) {
   const request=++loadSequence, selected=CHARS[key]; if(!selected) throw new Error('Không có nhân vật: '+key);
+  meal = null; resetGestures(); activeSpecies = key;
   cfg=selected; pitch=(selected.voice&&selected.voice.pitch)||1;
   rig=null; if (wrapper) { scene.remove(wrapper); disposeCharacter(wrapper); wrapper=null; }
   if(fish){fish.active=false;fish.g.visible=false;}
@@ -1519,7 +1656,7 @@ async function load(key) {
       const g = await new Promise((ok, no) => new GLTFLoader().load(selected.model, ok, undefined, no)), m = g.scene, box = new THREE.Box3().setFromObject(m);
       m.scale.setScalar(3.4 / box.getSize(V()).y); box.setFromObject(m); m.position.set(-(box.min.x + box.max.x) / 2, -box.min.y, -(box.min.z + box.max.z) / 2);
       const pivot = new THREE.Group(); pivot.add(m); const bones = { root: pivot, fx: { glow: 0 } }, morphs = [];
-      for (const n in (selected.bones || {})) { const o = m.getObjectByName(selected.bones[n]); if (o) bones[n] = o; }
+      for (const n in (selected.bones || {})) { const o = m.getObjectByName(selected.bones[n]); if (o && n !== 'root' && n !== 'fx') bones[n] = o; }
       m.traverse(o => { const d = o.morphTargetDictionary, mn = selected.morph && selected.morph.mouth; if (d && mn && d[mn] !== undefined) morphs.push({ mesh: o, i: d[mn] }); });
       built = { pivot, bones, eyeMat: null, morphs };
     } catch (e) { console.warn('Không nạp được', selected.model, e); }
@@ -1532,40 +1669,95 @@ async function load(key) {
   // Không bật bóng động cho GLB: iOS tiết kiệm pin; bóng tiếp xúc sử dụng texture.
   yR = [0, 3.4 * (selected.scale || 1)]; rig = makeRig(built.bones, built.eyeMat, built.morphs); rig.sec = built.sec || []; rig.shadow = sh;
   rig.sec.forEach(q => { if (q.abs) q.o.rotation[q.ax] = q.r0; });
-  F.sleeping = false; lastActive = T; go('idle', true);
+  F.sleeping = false; poke(); go(rest(), true);
 }
 
 /* ================= RAYCAST + CỬ CHỈ ================= */
 let rc, ptr;
 function pick(e) {
-  ptr.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); rc.setFromCamera(ptr, camera);
-  const h = rc.intersectObjects(wrapper.children, true)[0]; if (!h) return null;
-  for (let o = h.object; o; o = o.parent) if (o.userData.zone) return o.userData.zone;       // mô hình procedural: tag theo mesh
-  const f = (h.point.y - yR[0]) / (yR[1] - yR[0]);                                           // .glb: hitbox theo chiều cao (+ z) trong registry
-  for (const b of cfg.hitboxes || []) if (f >= b.y[0] && f <= b.y[1] && (!b.z || (h.point.z >= b.z[0] && h.point.z <= b.z[1]))) return b.zone;
-  return 'belly';
+  if (!rig) return null;
+  const rect = e.currentTarget.getBoundingClientRect();
+  ptr.set((e.clientX - rect.left) / rect.width * 2 - 1, 1 - (e.clientY - rect.top) / rect.height * 2);
+  rc.setFromCamera(ptr, camera);
+  const h = rc.intersectObject(rig.bones.root, true).find(hit => hit.object.isMesh);
+  if (!h) return null;
+  for (let o = h.object; o; o = o.parent) if (o.userData.zone) return o.userData.zone;
+  const point = rig.bones.root.worldToLocal(h.point);
+  const f = point.y / 3.4;
+  for (const b of cfg.hitboxes || []) if (f >= b.y[0] && f <= b.y[1] && (!b.z || (point.z >= b.z[0] && point.z <= b.z[1]))) return b.zone;
+  return f > .6 ? 'head' : f < .16 ? 'feet' : 'belly';
 }
-let touch = null, holdT = 0, holdOn = false, justWoke = false, tapsHead = [], lastStroke = -9, lastYank = -9;
-function tap(z) {
-  if (H.touch) H.touch(z);
-  if (z === 'head') { tapsHead = tapsHead.filter(x => T - x < 1.3); tapsHead.push(T); if (tapsHead.length >= 4) { tapsHead = []; react('angry'); } else react('purr'); } // chạm dồn dập = cáu
-  else if (z === 'belly') react('laugh'); else if (z === 'tail') react('tailYank'); else react(Math.random() < .5 ? 'feetSqueal' : 'feetHop');
+const contacts = new Map();
+let taps = [], hoverZone = null, hoverTime = -Infinity;
+function resetGestures() { contacts.clear(); taps = []; hoverZone = null; hoverTime = -Infinity; }
+function tap(zone) {
+  taps = taps.filter(time => T - time < 1.3);
+  taps.push(T);
+  if (taps.length >= 4) { taps = []; feedback('stumble', 'yelp', 'dizzy'); return; }
+  H.touch?.(zone === 'chin' ? 'head' : zone);
+  if (zone === 'head' || zone === 'chin') feedback('purr', 'purr', 'hearts', true);
+  else if (zone === 'belly' || zone === 'side') feedback('laugh', 'giggle', null, true);
+  else if (zone === 'tail') feedback('tailYank', 'yelp', null, true);
+  else feedback(Math.random() < .5 ? 'feetSqueal' : 'feetHop', 'squeal', null, true);
 }
 function bindInput(cv) {
-  window.addEventListener('pointerdown', () => { justWoke = F.sleeping; unlock(); wake(); }, true);   // chạm bất kỳ đâu = thức dậy + reset hẹn giờ
+  window.addEventListener('pointerdown', e => {
+    unlock();
+    if (e.target !== cv) wake();
+  }, true);
   cv.addEventListener('pointerdown', e => {
-    if (justWoke) { justWoke = false; return; } const z = pick(e); if (!z) return;
-    touch = { z, x: e.clientX, y: e.clientY, m: 0 }; holdOn = false; clearTimeout(holdT);
-    /* Chỉ có một nút micro push-to-talk: giữ trên thú là thao tác vuốt/chạm */                            // giữ >0.7s = Push-to-Talk
+    const zone = pick(e);
+    if (!zone) { wake(); return; }
+    if (contacts.size >= 2) return;
+    if (!F.listening && !F.speaking) callAnimal(activeSpecies, zone);
+    const contact = { zone, x: e.clientX, y: e.clientY, startY: e.clientY, time: performance.now(), moved: 0, done: wake() };
+    cv.setPointerCapture?.(e.pointerId);
+    contacts.set(e.pointerId, contact);
+    if (contacts.size === 2) {
+      const pair = [...contacts.values()];
+      const distance = Math.hypot(pair[0].x - pair[1].x, pair[0].y - pair[1].y);
+      pair.forEach(p => { p.pair = distance; p.done = true; });
+      if (pair.every(p => ['belly', 'side'].includes(p.zone))) feedback('laugh', 'giggle', 'dizzy', true);
+    }
   });
   cv.addEventListener('pointermove', e => {
-    if (!touch) return; touch.m += Math.hypot(e.clientX - touch.x, e.clientY - touch.y); touch.x = e.clientX; touch.y = e.clientY;
-    if (touch.m > 12 && !holdOn) clearTimeout(holdT);
-    if (touch.z === 'head' && touch.m > 50 && T - lastStroke > 2.4) { lastStroke = T; touch.m = 12; touch.done = 1; react('purr'); }   // vuốt đầu
-    if (touch.z === 'tail' && touch.m > 30 && T - lastYank > 1.3) { lastYank = T; touch.m = 12; touch.done = 1; react('tailYank'); }    // kéo đuôi
+    const p = contacts.get(e.pointerId);
+    if (!p) {
+      if (e.pointerType === 'mouse' && !e.buttons && !F.listening && !F.speaking && e.timeStamp - hoverTime >= 80) {
+        hoverTime = e.timeStamp;
+        const zone = pick(e);
+        if (zone && zone !== hoverZone) callAnimal(activeSpecies, zone, true);
+        hoverZone = zone;
+      }
+      return;
+    }
+    p.moved += Math.hypot(e.clientX - p.x, e.clientY - p.y);
+    p.x = e.clientX; p.y = e.clientY;
+    if (contacts.size === 2) {
+      const pair = [...contacts.values()];
+      if (p.pair !== undefined && Math.abs(Math.hypot(pair[0].x - pair[1].x, pair[0].y - pair[1].y) - p.pair) > 32) {
+        pair.forEach(q => { q.pair = undefined; });
+        feedback('bounce', 'boing', 'shock');
+      }
+    } else if (!p.done) {
+      if (p.startY - p.y > 46 && performance.now() - p.time < 240) {
+        p.done = true; feedback('bounce', 'boing', 'shock');
+      } else if (p.moved > 35 && (p.zone === 'head' || p.zone === 'chin') && ['head', 'chin'].includes(pick(e))) {
+        p.done = true; feedback('purr', 'purr', 'hearts', true);
+      } else if (p.moved > 30 && p.zone === 'tail') {
+        p.done = true; feedback('tailYank', 'yelp', 'shock', true);
+      }
+    }
   });
-  const up = () => { clearTimeout(holdT); if (holdOn) { holdOn = false; H.holdEnd && H.holdEnd(); } else if (touch && !touch.done && touch.m <= 12) tap(touch.z); touch = null; };
-  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', () => { clearTimeout(holdT); if (holdOn) { holdOn = false; H.holdEnd && H.holdEnd(); } touch = null; });
+  cv.addEventListener('pointerleave', () => { hoverZone = null; hoverTime = -Infinity; });
+  cv.addEventListener('pointerup', e => {
+    const p = contacts.get(e.pointerId);
+    contacts.delete(e.pointerId);
+    if (p && !p.done && p.moved <= 12) tap(p.zone);
+  });
+  for (const event of ['pointercancel', 'lostpointercapture']) {
+    cv.addEventListener(event, e => contacts.delete(e.pointerId));
+  }
 }
 function unlock() {
   ctx(); if (!unlock.d && 'speechSynthesis' in window) { unlock.d = 1; const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); }
@@ -1601,7 +1793,7 @@ function frame(ts) {
 }
 function start() { if(run)return; run=true; last=0;lastRendered=0;raf=requestAnimationFrame(frame); }
 function stop() { run = false; cancelAnimationFrame(raf); }
-function pause() { stop(); ax && ax.suspend(); H.pause && H.pause(); }
+function pause() { resetGestures(); tilt = tiltPose = 0; stop(); ax && ax.suspend(); H.pause && H.pause(); }
 function resume() { poke(); ax && ax.resume(); start(); H.resume && H.resume(); }
 document.addEventListener('visibilitychange', () => document.hidden ? pause() : resume());
 addEventListener('pagehide', pause); addEventListener('pageshow', () => !document.hidden && resume());
@@ -1614,9 +1806,11 @@ window.PetEngine = {
     renderer = new THREE.WebGLRenderer({ canvas, alpha:true, antialias:true, powerPreference:'default', stencil:false, preserveDrawingBuffer:false });
     renderer.setClearColor(0x000000,0);
     pr = Math.min(devicePixelRatio || 1, 1.5); scene = new THREE.Scene(); camera = new THREE.PerspectiveCamera(35, 1, .1, 100); setupStage();
-    resize(); addEventListener('resize', resize); addEventListener('orientationchange', resize); bindInput(canvas); start();
+    resize(); addEventListener('resize', resize); addEventListener('orientationchange', resize); bindInput(canvas);
+    ['❤️', '⭐', '❗', '💨', '🔥', '🎉', '✨', '🎊'].forEach(mat); start();
   },
-  load, go, set, poke, unlock, resize, playSfx,
+  load, go, set, poke, unlock, resize, playSfx, feedback, serve, callAnimal,
+  setTilt(value) { tilt = clamp(value, -.12, .12); },
   feed() { wake(); poke(); if(fish && fish.active)return; startFish(); go('jump',true); },
   sleep() { F.sleeping = true; F.listening = false; go('sleep', true); },
   pulse() { lipBoost = 1; },                                         // gọi mỗi khi TTS đọc sang từ mới
@@ -1634,6 +1828,7 @@ const PETS = Object.freeze(JSON.parse($('petRegistry').textContent));
 const storage = {getItem(k){try{return localStorage.getItem(k)}catch{return null}},setItem(k,v){try{localStorage.setItem(k,v)}catch{}}};
 let petKey = storage.getItem('pet-kind') in PETS ? storage.getItem('pet-kind') : 'cat';
 const app = {
+  micMode: ['echo','blow'].includes(storage.getItem('pet-mic-mode')) ? storage.getItem('pet-mic-mode') : 'talk',
   mode: ['demo','gemini','proxy'].includes(storage.getItem('pet-mode')) ? storage.getItem('pet-mode') : 'demo',
   model: storage.getItem('pet-model') || 'gemini-2.5-flash-lite',
   endpoint: storage.getItem('pet-endpoint') || '',
@@ -1672,37 +1867,156 @@ function setScenery(){
   }
 }
 setScenery();
+
+const SKY_PHASES = [
+  [0,  0x101937, 0x26365d, 0x4b547d, 1],
+  [4,  0x111c40, 0x303d69, 0x6c5880, .96],
+  [6,  0x777bb9, 0xf6a79e, 0xffd99f, .24],
+  [8,  0x78cdff, 0xb8e7fd, 0xffe7b7, 0],
+  [12, 0x62caff, 0xb6edff, 0xffedc7, 0],
+  [16, 0x84c8ff, 0xc3e2fc, 0xffdbab, 0],
+  [18, 0x7375b7, 0xe49aac, 0xffc282, .26],
+  [20, 0x172149, 0x3a4471, 0x7f628b, .91],
+  [24, 0x101937, 0x26365d, 0x4b547d, 1]
+];
+
+function skyAt(date) {
+  const hour = date.getHours() + date.getMinutes() / 60 + date.getSeconds() / 3600;
+  const next = SKY_PHASES.findIndex(phase => phase[0] > hour);
+  const [start, ...from] = SKY_PHASES[next - 1], [end, ...to] = SKY_PHASES[next];
+  const t = (hour - start) / (end - start);
+  const eased = t * t * (3 - 2 * t);
+  const blend = (a, b) => a + (b - a) * eased;
+  const color = index => {
+    const channels = [16, 8, 0].map(shift => Math.round(blend((from[index] >> shift) & 255, (to[index] >> shift) & 255)));
+    return 'rgb(' + channels.join(',') + ')';
+  };
+  return { hour, night: blend(from[3], to[3]), colors: [0, 1, 2].map(color) };
+}
+
+function updateSky() {
+  const { hour, night, colors } = skyAt(new Date());
+  const style = $('background').style;
+  ['top', 'middle', 'horizon'].forEach((stop, index) => style.setProperty('--sky-' + stop, colors[index]));
+  style.setProperty('--night-opacity', night);
+  style.setProperty('--star-opacity', night ** 2);
+  style.setProperty('--sky-glow', 1 - night);
+  function orbit(name, progress, light) {
+    const altitude = Math.sin(Math.PI * progress);
+    style.setProperty('--' + name + '-x', (8 + 84 * progress) + '%');
+    style.setProperty('--' + name + '-y', (48 - 36 * altitude) + '%');
+    style.setProperty('--' + name + '-opacity', Math.min(1, altitude * 8) * light);
+  }
+  orbit('sun', Math.min(1, Math.max(0, (hour - 5) / 14)), 1 - night);
+  orbit('moon', Math.min(1, ((hour + 24 - 18) % 24) / 13), night);
+}
+for (let i = 0; i < 32; i++) {
+  const star = document.createElement('span');
+  star.className = 'star';
+  star.style.left = ((i * 67 + 9) % 97) + '%';
+  star.style.top = ((i * i * 13 + i * 7 + 8) % 91) + '%';
+  star.style.setProperty('--size', (i % 7 === 0 ? 3 : 2) + 'px');
+  $('skyStars').appendChild(star);
+}
+updateSky();
+setInterval(() => { if (!document.hidden) updateSky(); }, 15000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) updateSky(); });
+addEventListener('pageshow', updateSky);
 function pace(happy){for(const el of document.querySelectorAll('.track'))for(const a of el.getAnimations())a.playbackRate=happy?1.65:1;}
 function excite(ms=4300){pace(true);clearTimeout(excitementClock);excitementClock=setTimeout(()=>pace(false),ms);}
 function bubble(text,ms=3300){const b=$('bubble'); b.textContent=String(text).slice(0,165); b.classList.add('show');clearTimeout(bubbleClock); if(ms)bubbleClock=setTimeout(()=>b.classList.remove('show'),ms);}
-function setMicUI(on){$('micBtn').classList.toggle('listening',on);$('micStatus').textContent=on?'ĐANG NGHE...':'GIỮ ĐỂ NÓI'; engine.set('listening',on);}
+function setMicUI(on){$('micBtn').classList.toggle('listening',on);$('micStatus').textContent=on?'ĐANG NGHE...':$('micBtn').title; engine.set('listening',on);}
 function showError(text){$('err').textContent=text;$('err').style.display='block';}
 
 try{engine.init($('c'),PETS);}catch(err){showError('Không thể khởi tạo WebGL: '+err.message);throw err;}
+const FOOD_MENU = {
+  rat:     ['🧀 Phô mai|🌻 Hạt hướng dương|🍐 Lát lê', 'laugh', 'giggle', 'Răng mình nhai nhanh ghê!'],
+  buffalo: ['🌿 Bó cỏ|🌽 Bắp ngọt|🎋 Mía', 'purr', 'animal', 'Mòooo! Ngọt quá đi!'],
+  tiger:   ['🍗 Đùi gà|🥩 Bít tết|🐟 Phi lê cá', 'celebrate', 'animal', 'Gừ gừ! Hổ con no bụng rồi!'],
+  cat:     ['🐟 Cá nướng|🥛 Bát sữa|🌱 Bánh cỏ mèo', 'purr', 'purr', 'Gừ gừ… ngon quá!'],
+  dragon:  ['🌶️ Ớt|🐉 Thanh long|🍑 Đào vàng', 'breeze', 'breeze', 'Phù! Rồng con thổi ra lửa!', 'fire'],
+  snake:   ['🥚 Trứng|🍎 Táo|🫐 Việt quất', 'wave', 'animal', 'Xì xì… ngon quá!'],
+  horse:   ['🥕 Cà rốt|🍎 Táo đỏ|🧊 Viên đường', 'feetHop', 'animal', 'Hí hí! Nhảy một cái nào!'],
+  goat:    ['🥬 Rau xanh|🥗 Bắp cải|☘️ Cỏ ba lá', 'jump', 'animal', 'Be be! Cho mình nhảy một cái!'],
+  monkey:  ['🍌 Chuối|🥭 Xoài|🥜 Các loại hạt', 'stumble', 'giggle', 'Ối! Suýt trượt vỏ chuối!', 'dizzy'],
+  rooster: ['🌽 Hạt bắp|🍚 Hạt cơm|🪱 Giun', 'spin', 'animal', 'Ò ó o! Mổ hết sạch rồi!'],
+  dog:     ['🦴 Xương|🍪 Bánh quy cho chó|🍖 Viên thịt', 'celebrate', 'animal', 'Gâu gâu! Đuôi mình vẫy tít!'],
+  pig:     ['🍉 Dưa hấu|🥟 Bánh bao|🍠 Khoai lang', 'laugh', 'animal', 'Ụt ịt! Bụng mình no tròn!']
+};
+let noticeTimer;
+function playNotice(message, ms = 2600) {
+  clearTimeout(noticeTimer);
+  $('playNotice').textContent = message;
+  if (ms) noticeTimer = setTimeout(() => { $('playNotice').textContent = ''; }, ms);
+}
+function renderTray(key) {
+  const [items, finish, ending, message, effect = 'hearts'] = FOOD_MENU[key];
+  const tray = $('foodTray'), fishButton = $('feedBtn');
+  tray.replaceChildren();
+  function button(group, icon, label, action) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = icon; b.title = label; b.setAttribute('aria-label', label);
+    b.addEventListener('click', () => { engine.unlock(); action(); });
+    group.appendChild(b);
+  }
+  items.split('|').forEach((item, index) => {
+    const space = item.indexOf(' '), icon = item.slice(0, space), label = item.slice(space + 1);
+    const sip = icon === '🥛';
+    button(tray, icon, label, () => {
+      engine.serve({ icon, rhythm: sip ? 1.8 : [3.4, 4.4, 2.6][index],
+        sound: sip ? 'sip' : index === 1 ? 'crunch' : 'chomp',
+        finish: [finish, 'wave', 'purr'][index], ending: [ending, 'animal', 'purr'][index],
+        message: index ? 'Ngon quá! Cảm ơn bạn!' : message, effect: index ? 'hearts' : effect });
+      playNotice(label);
+    });
+  });
+  tray.appendChild(fishButton);
+  const toys = $('toyTray');
+  if (toys.children.length > 1) return;
+  button(toys, '🪶', 'Lông vũ', () => engine.feedback('sneeze', 'hmm', 'wind'));
+  button(toys, '🥁', 'Trống', () => engine.feedback('stumble', 'drum', 'shock'));
+  button(toys, '🌀', 'Xoay một vòng', () => engine.feedback('spin', 'cheer', 'confetti', true));
+}
+engine.hooks.foodDone = food => playNotice(food.message);
+
 async function switchPet(key){
+  stopMicGame(); playNotice('');
   stopSpeech(); stopRecording(false); app.abort?.abort();app.abort=null;app.busy=false;
   petKey=key;storage.setItem('pet-kind',key);
-  const p=PETS[key],ks=Object.keys(PETS),other=ks[(ks.indexOf(key)+1)%ks.length];
-  $('changePet').textContent=PETS[other]?.emoji||'🐾';$('petName').textContent=p.name;
+  renderTray(key);
+  $('petName').textContent=PETS[key].name;
   for(const btn of document.querySelectorAll('.zodiac-item')){btn.classList.toggle('active',btn.dataset.pet===key);btn.setAttribute('aria-pressed',String(btn.dataset.pet===key));}
   const active=$('zodiacStrip').querySelector('.zodiac-item.active');active?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
-  try{await engine.load(key);engine.go('wave',true);engine.playSfx('animal');}
+  try{await engine.load(key);if (petKey === key) { engine.go('wave',true); engine.callAnimal(key, 'select'); }}
   catch(e){bubble('Không tải được thú cưng: '+e.message,6500);}
 }
 engine.hooks.stats=({fps,pixelRatio,triangles,calls})=>{
   $('debugInfo').textContent=`${fps} FPS · DPR ${pixelRatio.toFixed(2)} · ${triangles.toLocaleString()} triangles · ${calls} draw calls`;
 };
-engine.hooks.pause=()=>{stopRecording(false);stopSpeech();app.abort?.abort();app.abort=null;app.busy=false;pace(false);};
+engine.hooks.pause=()=>{stopMicGame();playNotice('');stopRecording(false);stopSpeech();app.abort?.abort();app.abort=null;app.busy=false;pace(false);};
 engine.hooks.touch=(zone)=>{
   const msg={head:['Ưm… thích vuốt đầu quá! 🥰','Êm êm! Mình thích lắm!'],belly:['Ha ha, nhột quá! 😆','Đừng cù bụng mình!'],tail:['Ối, đuôi của mình! 😮','Đừng kéo mạnh nhé!'],feet:['Hí hí, chân nhột! 🐾']}[zone]||['Vui quá!'];
-  engine.playSfx(zone==='belly'?'giggle':zone==='tail'?'yelp':'animal');
   bubble(msg[(Math.random()*msg.length)|0],2400);
   if(zone==='head'||zone==='belly')excite(2500);
 };
-for(const [key,animal] of Object.entries(PETS)){const btn=document.createElement('button');btn.type='button';btn.className='zodiac-item';btn.dataset.pet=key;btn.textContent=animal.emoji;btn.title=animal.zodiac+' · '+animal.name;btn.setAttribute('aria-label',animal.zodiac+' – '+animal.name);btn.addEventListener('click',()=>{engine.unlock();switchPet(key);});$('zodiacStrip').appendChild(btn);}
-$('changePet').addEventListener('click',()=>{const ks=Object.keys(PETS);switchPet(ks[(ks.indexOf(petKey)+1)%ks.length]);});
+for (const [key, animal] of Object.entries(PETS)) {
+  const btn = document.createElement('button');
+  btn.type = 'button'; btn.className = 'zodiac-item'; btn.dataset.pet = key;
+  btn.textContent = animal.emoji; btn.title = animal.zodiac + ' · ' + animal.name;
+  btn.setAttribute('aria-label', animal.zodiac + ' – ' + animal.name);
+  let previewTimer;
+  btn.addEventListener('pointerenter', event => {
+    if (event.pointerType !== 'mouse') return;
+    previewTimer = setTimeout(() => {
+      if (!engine.flags.listening && !engine.flags.speaking) engine.callAnimal(key, 'preview', true);
+    }, 140);
+  });
+  btn.addEventListener('pointerleave', () => clearTimeout(previewTimer));
+  btn.addEventListener('click', () => { clearTimeout(previewTimer); engine.unlock(); switchPet(key); });
+  $('zodiacStrip').appendChild(btn);
+}
 $('feedBtn').addEventListener('click',()=>{engine.unlock();engine.feed();bubble('Cá tới rồi! Nhom nhom! 🐟💞',4500);excite(6600);});
-$('sleepBtn').addEventListener('click',()=>{stopSpeech();engine.unlock();engine.sleep();bubble('Ngủ ngoan nha! 🌙');});
+$('sleepBtn').addEventListener('click',()=>{stopMicGame();playNotice('');stopSpeech();engine.unlock();engine.sleep();bubble('Ngủ ngoan nha! 🌙');});
 
 // iOS: giọng nói có thể nạp trễ; không đoán giới tính khi tên giọng không ghi rõ.
 function findVietnameseVoice(){
@@ -1808,14 +2122,196 @@ function stopRecording(send=true){
   if(!r){if(send && spokenText && !recHasError){const text=spokenText;spokenText='';handleVoice(text);}return;}
   try{send?r.stop():r.abort();}catch(e){recognizer=null;}
 }
+/* ================= TRÒ CHƠI MICRO (XỬ LÝ TẠI CHỖ) ================= */
+let micGame = null, echoSource = null;
+function stopMicGame(send = false) {
+  if (echoSource && !send) {
+    const output = echoSource;
+    echoSource = null;
+    output.stop();
+    engine.setAnalyser(null); engine.set('speaking', false);
+  }
+  const session = micGame;
+  if (!session) return;
+  const replay = send && (session.send || session.recorder?.state === 'recording');
+  session.send = Boolean(replay);
+  if (!replay) micGame = null;
+  clearTimeout(session.timer); cancelAnimationFrame(session.frame);
+  if (session.recorder?.state === 'recording') session.recorder.stop();
+  session.input?.disconnect(); session.input = null;
+  session.stream?.getTracks().forEach(track => track.stop());
+  setMicUI(false);
+}
+async function playEcho(session) {
+  if (micGame !== session || !session.send) return;
+  try {
+    const blob = new Blob(session.chunks, { type: session.recorder.mimeType });
+    if (!blob.size) { playNotice('Bạn thử nói lâu hơn nhé!'); return; }
+    const audio = await session.context.decodeAudioData(await blob.arrayBuffer());
+    if (micGame !== session) return;
+    const output = session.context.createBufferSource();
+    const meter = session.context.createAnalyser();
+    output.buffer = audio;
+    output.playbackRate.value = ['buffalo','tiger','dragon','horse','pig'].includes(petKey) ? .78 : 1.3;
+    output.connect(meter); meter.connect(session.context.destination);
+    output.onended = () => {
+      output.disconnect(); meter.disconnect();
+      if (echoSource !== output) return;
+      echoSource = null;
+      engine.setAnalyser(null); engine.set('speaking', false);
+    };
+    output.start();
+    echoSource = output;
+    engine.setAnalyser(meter); engine.set('speaking', true);
+    playNotice('🔊 Giọng của bạn!');
+  } catch {
+    if (micGame === session) playNotice('Máy này chưa phát được giọng nhại.');
+  } finally {
+    if (micGame === session) micGame = null;
+  }
+}
+function meterBlow(session) {
+  const meter = session.context.createAnalyser();
+  meter.fftSize = 512;
+  session.input = session.context.createMediaStreamSource(session.stream);
+  session.input.connect(meter);
+  const samples = new Float32Array(meter.fftSize);
+  let loudSince = 0;
+  function sample(now) {
+    meter.getFloatTimeDomainData(samples);
+    let energy = 0, peak = 0, crossings = 0;
+    for (let i = 0; i < samples.length; i++) {
+      const value = samples[i];
+      energy += value * value;
+      peak = Math.max(peak, Math.abs(value));
+      if (i && (value < 0) !== (samples[i - 1] < 0)) crossings++;
+    }
+    const blowing = Math.sqrt(energy / samples.length) > .045 && peak > .12 && crossings > 40;
+    loudSince = blowing ? loudSince || now : 0;
+    if (loudSince && now - loudSince > 135) {
+      stopMicGame();
+      engine.feedback('breeze', 'breeze', 'wind');
+      $('pinwheel').animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(1080deg)' }], { duration: 1100, easing: 'ease-out' });
+      playNotice('🌬️ Chong chóng quay rồi!');
+      return;
+    }
+    session.frame = requestAnimationFrame(sample);
+  }
+  session.frame = requestAnimationFrame(sample);
+  session.timer = setTimeout(() => { stopMicGame(); playNotice('Giữ nút và thổi thử nhé!'); }, 5500);
+}
+async function startMicGame() {
+  if (micGame && !micGame.send) return;
+  stopMicGame(); stopRecording(false); stopSpeech();
+  app.abort?.abort(); app.abort = null; app.busy = false;
+  const echo = app.micMode === 'echo';
+  if (!isSecureContext || !navigator.mediaDevices?.getUserMedia || (echo && !window.MediaRecorder)) {
+    playNotice('Micro cần HTTPS và trình duyệt hỗ trợ.'); return;
+  }
+  const session = { chunks: [] };
+  micGame = session;
+  try {
+    session.context = engine.ctx;
+    playNotice(echo ? 'Giữ nút và nói, rồi thả ra!' : 'Giữ nút và thổi!', 0);
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: {
+      channelCount: 1, echoCancellation: echo, noiseSuppression: echo, autoGainControl: echo
+    } });
+    if (micGame !== session) { stream.getTracks().forEach(track => track.stop()); return; }
+    session.stream = stream;
+    setMicUI(true);
+    if (!echo) { meterBlow(session); return; }
+    const recorder = session.recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = event => { if (event.data.size) session.chunks.push(event.data); };
+    recorder.onstop = () => playEcho(session);
+    recorder.onerror = () => {
+      if (micGame === session) { stopMicGame(); playNotice('Ghi âm bị lỗi.'); }
+    };
+    recorder.start();
+    session.timer = setTimeout(() => stopMicGame(true), 3000);
+  } catch {
+    if (micGame === session) { stopMicGame(); playNotice('Hãy cho phép truy cập micro rồi thử lại.'); }
+  }
+}
+function pressMic() {
+  if (app.micMode === 'talk') { stopMicGame(); startRecording(); }
+  else startMicGame();
+}
+function releaseMic(send) {
+  if (app.micMode === 'talk') stopRecording(send);
+  else if (micGame && (!micGame.send || !send)) {
+    const wasPending = !micGame.stream;
+    stopMicGame(send && app.micMode === 'echo');
+    if (wasPending && send) playNotice('Sau khi cấp quyền, hãy giữ nút micro lần nữa.');
+    else if (app.micMode === 'blow' || !send) playNotice('');
+  }
+}
+function updateMicControl() {
+  const label = { talk: 'Giữ để nói tiếng Việt', echo: 'Giữ để nhại giọng', blow: 'Giữ để thổi chong chóng' }[app.micMode];
+  $('micBtn').setAttribute('aria-label', label);
+  $('micBtn').title = label;
+  $('micStatus').textContent = label;
+  $('pinwheel').hidden = app.micMode !== 'blow';
+}
 const mic=$('micBtn');
-mic.addEventListener('pointerdown',e=>{e.preventDefault();mic.setPointerCapture?.(e.pointerId);startRecording();});
-mic.addEventListener('pointerup',e=>{e.preventDefault();stopRecording(true);});
-mic.addEventListener('pointercancel',()=>stopRecording(false));
-mic.addEventListener('lostpointercapture',()=>{if(micDown)stopRecording(true);});
+mic.addEventListener('pointerdown',e=>{e.preventDefault();mic.setPointerCapture?.(e.pointerId);pressMic();});
+mic.addEventListener('pointerup',e=>{e.preventDefault();releaseMic(true);});
+mic.addEventListener('pointercancel',()=>releaseMic(false));
+mic.addEventListener('lostpointercapture',()=>releaseMic(true));
 mic.addEventListener('contextmenu',e=>e.preventDefault());
-document.addEventListener('keydown',e=>{if(e.code==='Space'&&!e.repeat&&!$('overlay').classList.contains('open')&&e.target.tagName!=='INPUT'){e.preventDefault();startRecording();}});
-document.addEventListener('keyup',e=>{if(e.code==='Space'&&micDown){e.preventDefault();stopRecording(true);}});
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'&&!e.repeat&&!$('overlay').classList.contains('open')&&(e.target === mic || !e.target.closest?.('button,input,select,textarea,[contenteditable]'))){
+    e.preventDefault();pressMic();
+  }
+});
+document.addEventListener('keyup',e=>{if(e.code==='Space'&&(micDown||micGame)){e.preventDefault();releaseMic(true);}});
+
+/* ================= CẢM BIẾN CHUYỂN ĐỘNG ================= */
+let motionEnabled = false, lastShake = -Infinity, shakeHits = [], motionProbe;
+function receivedMotion() { clearTimeout(motionProbe); }
+$('motionBtn').addEventListener('click', async () => {
+  const control = $('motionBtn');
+  if (motionEnabled) {
+    motionEnabled = false; receivedMotion(); engine.setTilt(0); shakeHits = [];
+    control.textContent = 'Bật nghiêng và lắc máy'; return;
+  }
+  const sensors = [window.DeviceMotionEvent, window.DeviceOrientationEvent].filter(Boolean);
+  if (!sensors.length) { control.textContent = 'Máy này chưa hỗ trợ cảm biến'; return; }
+  control.disabled = true;
+  try {
+    const permissions = await Promise.allSettled(sensors.map(async sensor => sensor.requestPermission?.() ?? 'granted'));
+    motionEnabled = permissions.some(result => result.status === 'fulfilled' && result.value === 'granted');
+    control.textContent = motionEnabled ? 'Tắt nghiêng và lắc máy' : 'Cần cho phép cảm biến';
+    if (motionEnabled) motionProbe = setTimeout(() => {
+      motionEnabled = false; engine.setTilt(0);
+      control.textContent = 'Chưa có dữ liệu cảm biến · Thử lại';
+    }, 2500);
+  } finally { control.disabled = false; }
+});
+function canUseMotion() {
+  return motionEnabled && !document.hidden && !$('overlay').classList.contains('open')
+    && !engine.flags.listening && !engine.flags.speaking && !micGame && !app.busy;
+}
+addEventListener('deviceorientation', event => {
+  if (Number.isFinite(event.gamma)) receivedMotion();
+  if (!canUseMotion() || engine.flags.sleeping) { engine.setTilt(0); return; }
+  if (Number.isFinite(event.gamma)) engine.setTilt(-event.gamma * .005);
+});
+function magnitude(vector) {
+  return vector && [vector.x, vector.y, vector.z].every(Number.isFinite) ? Math.hypot(vector.x, vector.y, vector.z) : 0;
+}
+addEventListener('devicemotion', event => {
+  const linear = magnitude(event.acceleration), gravity = magnitude(event.accelerationIncludingGravity);
+  if (linear || gravity || Number.isFinite(event.acceleration?.x)) receivedMotion();
+  if (!canUseMotion()) { shakeHits = []; return; }
+  if (linear < 13 && gravity < 23) return;
+  const now = performance.now();
+  if (now - lastShake < 2450) return;
+  shakeHits = shakeHits.filter(time => now - time < 330);
+  if (now - (shakeHits[shakeHits.length - 1] ?? -Infinity) >= 45) shakeHits.push(now);
+  if (shakeHits.length < 2) return;
+  shakeHits = []; lastShake = now;
+  engine.feedback('stumble', 'yelp', 'dizzy');
+});
 
 const ACTIONS={jump:'jump',wave:'wave',spin:'spin',dance:'celebrate',celebrate:'celebrate',happy:'celebrate',eat:'eat',sleep:'sleep',laugh:'laugh',purr:'purr',confused:'confused'};
 function shortReply(s){return String(s||'').replace(/\[[^\]]+\]/g,'').replace(/\s+/g,' ').trim().split(' ').filter(Boolean).slice(0,14).join(' ').slice(0,135);}
@@ -1884,12 +2380,13 @@ async function handleVoice(text){
 }
 
 function formVisibility(){const mode=$('aiMode').value;$('geminiConfig').style.display=mode==='gemini'?'block':'none';$('proxyConfig').style.display=mode==='proxy'?'block':'none';}
-function openSettings(){stopRecording(false);$('aiMode').value=app.mode;$('aiModel').value=app.model;$('apiUrl').value=app.endpoint;$('apiKey').value=app.apiKey;$('overlay').classList.add('open');formVisibility();}
+function openSettings(){stopMicGame();playNotice('');engine.setTilt(0);stopRecording(false);$('micMode').value=app.micMode;$('aiMode').value=app.mode;$('aiModel').value=app.model;$('apiUrl').value=app.endpoint;$('apiKey').value=app.apiKey;$('overlay').classList.add('open');formVisibility();}
 function closeSettings(){$('overlay').classList.remove('open');}
 $('settingsBtn').addEventListener('click',openSettings);
 $('aiMode').addEventListener('change',formVisibility);
 $('cancelSettings').addEventListener('click',closeSettings);
 $('saveSettings').addEventListener('click',()=>{
+  app.micMode=$('micMode').value;storage.setItem('pet-mic-mode',app.micMode);updateMicControl();
   app.mode=$('aiMode').value;app.model=$('aiModel').value.trim()||'gemini-2.5-flash-lite';app.endpoint=$('apiUrl').value.trim();app.apiKey=$('apiKey').value.trim();
   storage.setItem('pet-mode',app.mode);storage.setItem('pet-model',app.model);storage.setItem('pet-endpoint',app.endpoint);
   closeSettings();bubble(app.mode==='demo'?'Đang dùng chế độ thử không cần API!':'Đã lưu cài đặt. Giữ 🎤 để nói nhé!',4200);
@@ -1902,6 +2399,7 @@ try{
   const manifest={name:'Bạn Thú AI',short_name:'12 Con Giáp',start_url:location.pathname||'./',display:'standalone',orientation:'portrait',background_color:'#9adcf5',theme_color:'#ff93ae',icons:[{src:icon,sizes:'any',type:'image/svg+xml',purpose:'any'}]};
   $('webManifest').href=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'}));
 }catch(e){}
+updateMicControl();
 switchPet(petKey);
 </script>
 </body>
