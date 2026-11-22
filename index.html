@@ -2029,12 +2029,9 @@ function findVietnameseVoice(){
   const voices=speechSynthesis.getVoices().filter(voice=>/^vi(?:[-_]|$)/i.test(voice.lang));
   const score=voice=>{
     const label=`${voice.name} ${voice.voiceURI}`;
-    const vietnam= /^vi[-_]VN$/i.test(voice.lang) ? 16 : 0;
-    const female=/\b(?:linh|hoaimy|hoài my|female)\b|nữ/i.test(label) ? 8 : 0;
-    const male=/\b(?:namminh|nam minh|male)\b|\bnam$/i.test(voice.name) ||
-      /\b(?:namminh|nam minh|male)\b/i.test(label);
-    const quality=/premium|enhanced|neural|natural|nâng cao|cao cấp/i.test(label) ? 4 : 0;
-    return vietnam+female+quality-(male?6:0)+(voice.default?2:0)+(voice.localService?1:0);
+    const male=/\b(?:namminh|nam minh|male)\b/i.test(label)||/\bnam$/i.test(voice.name);
+    const vietnam=/^vi[-_]VN$/i.test(voice.lang);
+    return (male?16:0)+(vietnam?8:0)+(voice.default?2:0)+(voice.localService?1:0);
   };
   return voices.sort((a,b)=>score(b)-score(a))[0]||null;
 }
@@ -2058,8 +2055,8 @@ function speak(text,usePreferredVoice=true){
     const utterance=new SpeechSynthesisUtterance(content);
     utterance.lang='vi-VN';
     if(voice)utterance.voice=voice;
-    utterance.pitch=1.12;
-    utterance.rate=.92;
+    utterance.pitch=1.35;
+    utterance.rate=1.05;
     let started=false;
     const done=()=>{
       if(token!==app.speechToken)return;
