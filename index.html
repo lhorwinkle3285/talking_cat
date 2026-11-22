@@ -2015,12 +2015,20 @@ for (const [key, animal] of Object.entries(PETS)) {
 $('feedBtn').addEventListener('click',()=>{engine.unlock();engine.feed();bubble('Cá tới rồi! Nhom nhom! 🐟💞',4500);excite(6600);});
 $('sleepBtn').addEventListener('click',()=>{stopMicGame();playNotice('');stopSpeech();engine.unlock();engine.sleep();bubble('Ngủ ngoan nha! 🌙');});
 
-// iOS: giọng nói có thể nạp trễ; không đoán giới tính khi tên giọng không ghi rõ.
+// Safari có thể nạp danh sách giọng sau khi trang đã mở.
 function findVietnameseVoice(){
   if(!window.speechSynthesis)return null;
-  const v=speechSynthesis.getVoices().filter(x=>/^vi([_-]|$)/i.test(x.lang));
-  const score=x=>(/linh|female|nữ/i.test(x.name)?5:0)+(/google/i.test(x.name)?2:0)+(x.localService?1:0)-(/\bmale\b|\bnam\b/i.test(x.name)&&!/female/i.test(x.name)?4:0);
-  return v.sort((a,b)=>score(b)-score(a))[0]||null;
+  const voices=speechSynthesis.getVoices().filter(voice=>/^vi(?:[-_]|$)/i.test(voice.lang));
+  const score=voice=>{
+    const label=`${voice.name} ${voice.voiceURI}`;
+    const vietnam= /^vi[-_]VN$/i.test(voice.lang) ? 16 : 0;
+    const female=/\b(?:linh|hoaimy|hoài my|female)\b|nữ/i.test(label) ? 8 : 0;
+    const male=/\b(?:namminh|nam minh|male)\b|\bnam$/i.test(voice.name) ||
+      /\b(?:namminh|nam minh|male)\b/i.test(label);
+    const quality=/premium|enhanced|neural|natural|nâng cao|cao cấp/i.test(label) ? 4 : 0;
+    return vietnam+female+quality-(male?6:0)+(voice.default?2:0)+(voice.localService?1:0);
+  };
+  return voices.sort((a,b)=>score(b)-score(a))[0]||null;
 }
 function refreshVoices(){voiceVI=findVietnameseVoice();}
 if(window.speechSynthesis){refreshVoices();if(speechSynthesis.addEventListener)speechSynthesis.addEventListener('voiceschanged',refreshVoices);else speechSynthesis.onvoiceschanged=refreshVoices;
@@ -2038,7 +2046,7 @@ function speak(text){
   const token=app.speechToken;
   let u=new SpeechSynthesisUtterance(content);u.lang='vi-VN';
   refreshVoices();if(voiceVI)u.voice=voiceVI;
-  u.pitch=1.35;u.rate=1.05;u.volume=1;
+  u.pitch=1.12;u.rate=.92;u.volume=1;
   const begin=()=>{if(token!==app.speechToken)return;speakingNow=true;engine.set('speaking',true);};
   const done=()=>{if(token!==app.speechToken)return;clearTimeout(ttsGuard);clearTimeout(ttsBegin);speakingNow=false;engine.set('speaking',false);};
   u.onstart=begin;u.onboundary=()=>{begin();engine.pulse();};u.onend=done;u.onerror=done;
