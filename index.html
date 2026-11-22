@@ -34,10 +34,7 @@ button,input,select{font:inherit} button{cursor:pointer;-webkit-tap-highlight-co
 #veil{position:fixed;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at center,transparent 44%,rgba(250,159,129,.085) 100%)}
 #c{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:2;touch-action:none;outline:none}
 #appUI{position:fixed;inset:0;z-index:5;pointer-events:none}
-.topbar{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 13px) 16px 0;display:flex;align-items:center;gap:9px}
-.brand{display:flex;align-items:center;gap:10px;min-width:0;margin-right:auto;border:1px solid #ffffffb8;border-radius:22px;background:#fffaf1d9;box-shadow:0 12px 28px #c46f8d1e, inset 0 2px 1px #fff;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:8px 13px 9px 9px}
-.brand-icon{display:grid;place-items:center;width:35px;height:35px;border-radius:15px;background:linear-gradient(145deg,#ffcf8e,#ff8d9e);box-shadow:inset 0 1px #fff9;font-size:22px}
-.brand strong{font-size:15px;white-space:nowrap;display:block;letter-spacing:.2px;line-height:1.12;color:#684666}.brand small{display:block;color:#b18ba0;font-size:10px;margin-top:3px;font-weight:750;letter-spacing:.4px}
+.topbar{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 13px) 16px 0;display:flex;align-items:center;justify-content:flex-end}
 .icon-btn{pointer-events:auto;display:grid;place-items:center;border:none;border-radius:22px;width:51px;height:51px;flex:none;font-size:24px;background:linear-gradient(155deg,#fff,#fff4f5);color:#796184;box-shadow:0 8px 21px #8f688733,inset 0 2px 1px #fff;transition:transform .12s}
 .icon-btn:active,.feed:active,.sleep:active,.mic:active{transform:scale(.93)}
 #badgeFPS{position:absolute;right:17px;top:calc(env(safe-area-inset-top,0px) + 75px);padding:5px 9px;border-radius:99px;background:#fffcf2af;color:#6a6984;font-size:10px;font-weight:800;border:1px solid #fff9}
@@ -70,7 +67,6 @@ button,input,select{font:inherit} button{cursor:pointer;-webkit-tap-highlight-co
 
 /* Bảng điều khiển bé: toàn bộ là biểu tượng, không có văn bản hiển thị. */
 .sr-only{position:absolute!important;left:-10000px!important;top:auto!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important}
-.brand-simple{padding:7px;border-radius:21px}.brand-simple .brand-icon{width:39px;height:39px;font-size:24px}
 #bubble.sr-only{opacity:0!important;pointer-events:none!important}
 .zodiac-strip{position:relative;display:flex;gap:9px;align-items:center;width:min(100%,550px);padding:7px 10px 11px;overflow-x:auto;overscroll-behavior-x:contain;touch-action:pan-x;pointer-events:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-radius:26px;background:linear-gradient(180deg,#fff9e9ad,#fff4f0b5);border:1px solid #ffffffae;box-shadow:0 9px 22px #a67a8e21;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .zodiac-strip::-webkit-scrollbar{display:none}
@@ -80,7 +76,6 @@ button,input,select{font:inherit} button{cursor:pointer;-webkit-tap-highlight-co
 .zodiac-item.active:after{content:'♥';position:absolute;right:-2px;top:-8px;font-size:15px;color:#ff618e;filter:drop-shadow(0 1px 1px white)}
 .bottom{gap:8px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 9px)}
 .control-panel{min-height:99px;gap:15px}.mic{width:97px;height:97px;border-radius:35px}.mic svg{width:48px;height:48px}.feed,.sleep{width:65px;height:65px}
-#appUI #petName{display:none}
 @media(max-height:720px){.zodiac-item{flex-basis:49px;width:49px;height:48px;font-size:26px}.zodiac-strip{padding:5px 8px 7px;gap:7px}.control-panel{min-height:78px}.mic{width:76px;height:76px;border-radius:28px}.feed,.sleep{width:54px;height:54px;border-radius:20px}.feed svg{width:41px;height:41px}.mic svg{width:37px;height:37px}}
 #zodiacStrip{width:min(100%,430px);gap:2px;padding:5px 5px 7px;border-radius:20px}
 #zodiacStrip .zodiac-item{flex:1 0 30px;width:auto;height:44px;border-radius:13px;font-size:clamp(17px,5vw,24px)}
@@ -117,7 +112,6 @@ button,input,select{font:inherit} button{cursor:pointer;-webkit-tap-highlight-co
 <div id="veil"></div>
 <div id="appUI">
   <div class="topbar">
-    <div class="brand brand-simple" aria-label="Bạn Thú AI"><span class="brand-icon" aria-hidden="true">🌈</span><span id="petName" class="sr-only">Mèo Mimi</span></div>
     <button id="settingsBtn" class="icon-btn" aria-label="Cài đặt của phụ huynh" title="Cài đặt">⚙</button>
   </div>
   <div id="bubble" class="sr-only" aria-live="polite"></div>
@@ -146,17 +140,19 @@ button,input,select{font:inherit} button{cursor:pointer;-webkit-tap-highlight-co
     <label for="aiMode">Chế độ trả lời</label>
     <select id="aiMode"><option value="demo">Thử ngay – phản hồi mẫu (không cần API)</option><option value="gemini">Gemini trực tiếp – chỉ dùng thử riêng</option><option value="proxy">Máy chủ AI riêng – nên dùng khi phát hành</option></select>
     <div id="geminiConfig">
-      <label for="apiKey">Gemini API key (không lưu vào file)</label>
-      <input type="password" id="apiKey" placeholder="Dán khóa API của bạn" autocomplete="off" spellcheck="false">
+      <label for="apiKey">Gemini API key (lưu trên trình duyệt khi bấm Lưu cài đặt)</label>
+      <input type="password" id="apiKey" placeholder="Dán khóa API của bạn" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
       <label for="aiModel">Tên model Gemini</label>
-      <input id="aiModel" value="gemini-2.5-flash-lite" autocomplete="off">
+      <input id="aiModel" value="gemini-3.5-flash-lite" autocomplete="off">
+      <div class="setting-actions"><button type="button" id="testGemini">Kiểm tra Gemini</button></div>
+      <div id="geminiStatus" class="notice" role="status" hidden></div>
     </div>
     <div id="proxyConfig">
       <label for="apiUrl">API proxy HTTPS (trả về JSON {reply, action})</label>
       <input id="apiUrl" placeholder="https://example.com/api/pet" inputmode="url" autocomplete="off">
     </div>
     <div id="debugInfo" class="notice">Chỉ số FPS hiển thị ở đây khi ứng dụng đang chạy.</div>
-    <div class="notice">🔒 Chỉ nên dùng API key trực tiếp để thử trên máy cá nhân; không nhúng khóa vào bản phát hành. iOS Chrome / PWA có thể không hỗ trợ nhận dạng giọng nói trên trình duyệt: khi chọn Gemini có khóa, ứng dụng dùng ghi âm tối đa 8 giây và gửi audio qua REST (tốn nhiều token hơn text). Với Safari, ưu tiên nhận dạng giọng nói của trình duyệt. Micro cần HTTPS và quyền truy cập.</div>
+    <div class="notice">🔒 Chỉ dùng API key trực tiếp để thử trên máy cá nhân. Chế độ Gemini gửi tối đa 8 giây ghi âm cho Google để nhận câu trả lời. Micro cần HTTPS hoặc localhost và quyền truy cập.</div>
     <label for="micMode">Trò chơi micro</label>
     <select id="micMode"><option value="talk">Trò chuyện</option><option value="echo">Giọng nhại (3 giây)</option><option value="blow">Thổi chong chóng</option></select>
     <div class="setting-actions"><button type="button" id="motionBtn">Bật nghiêng và lắc máy</button></div>
@@ -1825,21 +1821,23 @@ window.PetEngine = {
 // =======================================================================
 const $ = id => document.getElementById(id);
 const PETS = Object.freeze(JSON.parse($('petRegistry').textContent));
-const storage = {getItem(k){try{return localStorage.getItem(k)}catch{return null}},setItem(k,v){try{localStorage.setItem(k,v)}catch{}}};
+const storage = {getItem(k){try{return localStorage.getItem(k)}catch{return null}},setItem(k,v){try{localStorage.setItem(k,v);return true}catch{return false}}};
+const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash-lite';
+const GEMINI_KEY_STORAGE = 'pet-gemini-api-key';
+const savedModel = storage.getItem('pet-model');
 let petKey = storage.getItem('pet-kind') in PETS ? storage.getItem('pet-kind') : 'cat';
 const app = {
   micMode: ['echo','blow'].includes(storage.getItem('pet-mic-mode')) ? storage.getItem('pet-mic-mode') : 'talk',
   mode: ['demo','gemini','proxy'].includes(storage.getItem('pet-mode')) ? storage.getItem('pet-mode') : 'demo',
-  model: storage.getItem('pet-model') || 'gemini-2.5-flash-lite',
+  model: !storage.getItem('pet-model-version') && savedModel === 'gemini-2.5-flash-lite' ? DEFAULT_GEMINI_MODEL : savedModel || DEFAULT_GEMINI_MODEL,
   endpoint: storage.getItem('pet-endpoint') || '',
-  apiKey: '',  // không ghi vào localStorage hoặc tệp HTML
+  apiKey: storage.getItem(GEMINI_KEY_STORAGE) || '',
   busy:false, speechToken:0, abort:null
 };
 let bubbleClock=0, excitementClock=0, lastTouchVoice=0, lastSpoken='', recognizer=null;
 let micDown=false, released=false, spokenText='', recHasError=false, speakingNow=false, voiceVI=null;
-let clipRecorder=null,clipStream=null,clipTimer=0,clipChunks=[];
+let audioClip=null;
 const RECOGNITION=window.SpeechRecognition || window.webkitSpeechRecognition;
-const preferAudioRest=()=>app.mode==='gemini'&&!!app.apiKey&&typeof MediaRecorder!=='undefined'&&!!navigator.mediaDevices?.getUserMedia&&(/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent)||navigator.standalone===true); // iOS browsers/WKWebView may expose but fail WebSpeech STT
 function b64(blob){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]||'');reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob);});}
 const engine=window.PetEngine;
 
@@ -1984,7 +1982,6 @@ async function switchPet(key){
   stopSpeech(); stopRecording(false); app.abort?.abort();app.abort=null;app.busy=false;
   petKey=key;storage.setItem('pet-kind',key);
   renderTray(key);
-  $('petName').textContent=PETS[key].name;
   for(const btn of document.querySelectorAll('.zodiac-item')){btn.classList.toggle('active',btn.dataset.pet===key);btn.setAttribute('aria-pressed',String(btn.dataset.pet===key));}
   const active=$('zodiacStrip').querySelector('.zodiac-item.active');active?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
   try{await engine.load(key);if (petKey === key) { engine.go('wave',true); engine.callAnimal(key, 'select'); }}
@@ -2050,50 +2047,67 @@ function speak(text){
   try{speechSynthesis.speak(u);}catch(e){done();bubble('Không phát được giọng nói trên thiết bị này.');}
 }
 
-// iOS Chrome / chế độ PWA: WebSpeech STT có thể không hoạt động trong WKWebView.
-// Nếu phụ huynh chọn Gemini, ghi âm ngắn, gửi 1 request REST generateContent audio.
-// Chi phí token cao hơn text STT, nên giới hạn cứng 8 giây, KHÔNG streaming.
+// Gửi WAV để dùng cùng một định dạng trên các trình duyệt.
+async function encodeVoiceClip(blob){
+  const audio=await engine.ctx.decodeAudioData(await blob.arrayBuffer());
+  const sampleRate=16000;
+  const context=new OfflineAudioContext(1,Math.min(sampleRate*8,Math.ceil(audio.duration*sampleRate)),sampleRate);
+  const source=context.createBufferSource();
+  source.buffer=audio;source.connect(context.destination);source.start();
+  const samples=(await context.startRendering()).getChannelData(0);
+  const wav=new DataView(new ArrayBuffer(44+samples.length*2));
+  wav.setUint32(0,0x52494646);wav.setUint32(4,wav.byteLength-8,true);
+  wav.setUint32(8,0x57415645);wav.setUint32(12,0x666d7420);
+  wav.setUint32(16,16,true);wav.setUint16(20,1,true);wav.setUint16(22,1,true);
+  wav.setUint32(24,sampleRate,true);wav.setUint32(28,sampleRate*2,true);
+  wav.setUint16(32,2,true);wav.setUint16(34,16,true);
+  wav.setUint32(36,0x64617461);wav.setUint32(40,samples.length*2,true);
+  for(let i=0;i<samples.length;i++)wav.setInt16(44+i*2,Math.max(-1,Math.min(1,samples[i]))*32767,true);
+  return {mimeType:'audio/wav',data:await b64(new Blob([wav],{type:'audio/wav'}))};
+}
 async function startAudioClip(){
-  setMicUI(true);
+  const clip={chunks:[],send:false};
+  audioClip=clip;
+  bubble('Đang bật micro…',0);
   try{
-    if(!window.isSecureContext)throw Error('Micro cần HTTPS hoặc localhost.');
     const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,channelCount:1},video:false});
-    if(!micDown){stream.getTracks().forEach(t=>t.stop());return;}
-    clipStream=stream;clipChunks=[];
-    const mime=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':MediaRecorder.isTypeSupported('audio/mp4')?'audio/mp4':'';
-    const recorder=new MediaRecorder(stream,mime?{mimeType:mime,audioBitsPerSecond:24000}:{audioBitsPerSecond:24000});
-    clipRecorder=recorder;
-    recorder.ondataavailable=e=>{if(e.data?.size)clipChunks.push(e.data);};
-    recorder.onerror=()=>{bubble('Ghi âm bị lỗi.');recHasError=true;};
+    if(audioClip!==clip){stream.getTracks().forEach(t=>t.stop());return;}
+    clip.stream=stream;
+    const recorder=clip.recorder=new MediaRecorder(stream);
+    recorder.ondataavailable=e=>{if(e.data.size)clip.chunks.push(e.data);};
+    recorder.onerror=()=>{if(audioClip===clip){stopRecording(false);bubble('Ghi âm bị lỗi.');}};
     recorder.onstop=async()=>{
-      clearTimeout(clipTimer);stream.getTracks().forEach(t=>t.stop());
-      if(clipStream===stream)clipStream=null;
-      if(clipRecorder===recorder)clipRecorder=null;
-      const chunks=clipChunks.splice(0);
-      if(!released||recHasError||!chunks.length)return;
+      clearTimeout(clip.timer);stream.getTracks().forEach(t=>t.stop());
+      if(audioClip!==clip||!clip.send)return;
       try{
-        const file=new Blob(chunks,{type:recorder.mimeType||'audio/mp4'});
-        if(file.size<800)return;
-        const mimeType=/mp4|m4a/.test(file.type)?'audio/m4a':'audio/webm';
-        const data=await b64(file);
-        if(data.length>750000)throw Error('Đoạn ghi âm quá lớn.');
-        handleVoice({data,mimeType});
-      }catch(e){bubble('Không gửi được giọng nói. '+e.message);engine.go('confused',true);}
+        if(!clip.chunks.length){bubble('Bạn thử giữ nút 🎤 và nói lâu hơn nhé.');return;}
+        const audio=await encodeVoiceClip(new Blob(clip.chunks,{type:recorder.mimeType}));
+        if(audioClip===clip)handleVoice(audio);
+      }catch(e){if(audioClip===clip)bubble('Không đọc được bản ghi âm. '+e.message);}
+      finally{if(audioClip===clip)audioClip=null;}
     };
     recorder.start();
-    clipTimer=setTimeout(()=>stopRecording(true),8000);
-  }catch(e){micDown=false;released=false;setMicUI(false);clipStream?.getTracks().forEach(t=>t.stop());clipStream=null;bubble('Micro chưa sẵn sàng. '+e.message);engine.playSfx('hmm');engine.go('confused',true);}
+    setMicUI(true);bubble('Mình đang nghe bạn nói…',0);
+    clip.timer=setTimeout(()=>stopRecording(true),8000);
+  }catch(e){
+    if(audioClip!==clip)return;
+    stopRecording(false);
+    bubble(e.name==='NotAllowedError'?'Cần cho phép micro trong trình duyệt.':'Micro chưa sẵn sàng. '+e.message,6000);
+  }
 }
 // Micro: nhấn giữ duy nhất ở giữa màn hình, nhả mới gửi câu hỏi.
 function startRecording(){
   if(micDown)return;
+  if(app.mode==='gemini'&&!app.apiKey){
+    openSettings();showGeminiStatus('Nhập Gemini API key rồi bấm Lưu cài đặt.');
+    $('apiKey').focus();return;
+  }
+  if(!window.isSecureContext){bubble('Mở trang qua HTTPS hoặc localhost để dùng micro.',6400);return;}
+  if(audioClip)stopRecording(false);
   micDown=true;released=false;spokenText='';recHasError=false;
   engine.unlock();stopSpeech();app.abort?.abort();app.abort=null;app.busy=false;
-  if(preferAudioRest()){startAudioClip();return;}
+  if(app.mode==='gemini'&&window.MediaRecorder&&navigator.mediaDevices?.getUserMedia&&window.OfflineAudioContext){startAudioClip();return;}
   if(!RECOGNITION){micDown=false;setMicUI(false);bubble('Trình duyệt này chưa hỗ trợ nhận dạng giọng nói. Dùng Safari hoặc bật Gemini trong cài đặt phụ huynh.',6200);engine.playSfx('hmm');speak('Bé nhờ người lớn mở micro giúp nhé!');return;}
-  if(!isSecureContext && location.hostname!=='localhost' && location.protocol!=='file:'){
-    micDown=false;bubble('Hãy mở qua HTTPS để cấp quyền micro trên iPhone.',6400);return;
-  }
   const r=new RECOGNITION();recognizer=r;r.lang='vi-VN';r.continuous=false;r.interimResults=true;r.maxAlternatives=1;
   r.onresult=e=>{let phrase='';for(const item of e.results)phrase+=(item[0]?.transcript||'')+' ';spokenText=phrase.trim();if(spokenText)bubble('🎧 '+spokenText,0);};
   r.onerror=e=>{if(recognizer!==r)return;recHasError=true;
@@ -2110,10 +2124,15 @@ function startRecording(){
   catch(e){recognizer=null;micDown=false;setMicUI(false);bubble('Không bật được micro: '+e.message,5000);}
 }
 function stopRecording(send=true){
-  if(clipRecorder||clipStream){
-    micDown=false;released=send;setMicUI(false);clearTimeout(clipTimer);
-    if(clipRecorder&&clipRecorder.state!=='inactive')try{clipRecorder.stop();}catch{}
-    // Đang chờ getUserMedia: startAudioClip sẽ dừng stream khi lời hứa hoàn thành.
+  if(audioClip){
+    const clip=audioClip;
+    if(send&&!micDown)return;
+    micDown=false;setMicUI(false);clearTimeout(clip.timer);
+    clip.send=send&&clip.recorder?.state==='recording';
+    if(!clip.send)audioClip=null;
+    if(clip.recorder?.state==='recording')clip.recorder.stop();
+    else clip.stream?.getTracks().forEach(t=>t.stop());
+    if(send&&!clip.recorder)bubble('Đợi micro sẵn sàng rồi giữ nút 🎤 và nói lại.',5000);
     return;
   }
   if(!micDown && !recognizer)return;
@@ -2329,6 +2348,35 @@ function demoReply(text){
   if(/đếm/.test(q))return{reply:'Một, hai, ba, bốn, năm! Giỏi quá!',action:'celebrate'};
   return {reply:['Mình đang nghe nè! Bạn kể thêm đi!','Ôi, hay quá! Mình thích chơi cùng bạn!','Mình muốn làm bạn với bạn mãi luôn!'][Math.floor(Math.random()*3)],action:'wave'};
 }
+async function requestGemini(apiKey,model,parts,system,signal){
+  if(!apiKey)throw Error('Bạn cần nhập Gemini API key.');
+  model=model.replace(/^models\//,'');
+  if(!/^[a-zA-Z0-9._-]+$/.test(model))throw Error('Tên model Gemini không hợp lệ.');
+  const generationConfig={temperature:.7,maxOutputTokens:160};
+  if(/^gemini-2\.5-flash/.test(model))generationConfig.thinkingConfig={thinkingBudget:0};
+  const body=JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:'user',parts}],generationConfig});
+  let response;
+  try{
+    response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{
+      method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':apiKey},body,signal});
+  }catch(e){
+    if(signal.aborted)throw e;
+    throw Error('Không truy cập được máy chủ Gemini. Kiểm tra mạng hoặc tiện ích chặn kết nối.');
+  }
+  const data=await response.json().catch(()=>null);
+  if(!response.ok){
+    const reason=data?.error?.details?.find(detail=>detail.reason)?.reason;
+    if(reason==='API_KEY_INVALID'||[401,403].includes(response.status))throw Error(`Kiểm tra API key và quyền truy cập Gemini (HTTP ${response.status}).`);
+    if(response.status===404)throw Error('Model Gemini không khả dụng với dự án này (404). Kiểm tra tên model.');
+    if(response.status===429)throw Error('Gemini đã chạm giới hạn yêu cầu hoặc hạn mức (429).');
+    const detail=data?.error?.message?.replaceAll(apiKey,'[ẩn]');
+    throw Error(`Gemini HTTP ${response.status}${detail?' · '+detail.slice(0,160):''}`);
+  }
+  const candidate=data?.candidates?.[0];
+  const answer=candidate?.content?.parts?.filter(part=>!part.thought).map(part=>part.text||'').join('').trim();
+  if(!answer)throw Error(`Gemini không trả về câu trả lời (${data?.promptFeedback?.blockReason||candidate?.finishReason||'phản hồi trống'}).`);
+  return answer;
+}
 async function askAI(text){
   const controller=new AbortController();app.abort=controller;
   const timeout=setTimeout(()=>controller.abort(),16000);
@@ -2340,15 +2388,7 @@ async function askAI(text){
         {text:`Bé nói tiếng Việt với ${PETS[petKey].name}. Phản hồi câu nói trong âm thanh.`},
         {inlineData:{mimeType:text.mimeType,data:text.data}}
       ];
-      const req={systemInstruction:{parts:[{text:system}]},contents:[{role:'user',parts}],generationConfig:{temperature:.7,maxOutputTokens:65}};
-      const model=app.model.trim()||'gemini-2.5-flash-lite';
-      if(!/^[a-zA-Z0-9._-]+$/.test(model))throw Error('Tên model không hợp lệ');
-      // Gemini 2.5 Flash hỗ trợ chế độ không thinking để phản hồi nhanh, tránh hết token suy luận.
-      if(/^gemini-2\.5-flash/.test(model)) req.generationConfig.thinkingConfig={thinkingBudget:0};
-      const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{
-        method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':app.apiKey},body:JSON.stringify(req),signal:controller.signal});
-      const data=await response.json();if(!response.ok)throw Error(response.status===429?'Đã chạm giới hạn miễn phí (429). Vui lòng thử sau.':data?.error?.message||`HTTP ${response.status}`);
-      return parseAnswer((data.candidates?.[0]?.content?.parts||[]).map(x=>x.text||'').join(''));
+      return parseAnswer(await requestGemini(app.apiKey,app.model,parts,system,controller.signal));
     }
     if(app.mode==='proxy'){
       if(!/^https:\/\//i.test(app.endpoint))throw Error('Cần địa chỉ API proxy HTTPS.');
@@ -2375,20 +2415,44 @@ async function handleVoice(text){
     if(action==='eat'){engine.feed();excite(6600);}else if(action==='sleep'){engine.sleep();}
     else {engine.go(action,true);if(['celebrate','jump','purr'].includes(action))excite();}
     speak(reply);
-  }catch(err){if(err.name!=='AbortError')bubble('Không kết nối được: '+err.message.slice(0,100),6000);else bubble('Hơi lâu rồi, bạn thử lại nha!');engine.go('confused',true);}
+  }catch(err){if(err.name!=='AbortError')bubble(err.message,8000);else bubble('Hơi lâu rồi, bạn thử lại nha!');engine.go('confused',true);}
   finally{app.busy=false;}
 }
 
 function formVisibility(){const mode=$('aiMode').value;$('geminiConfig').style.display=mode==='gemini'?'block':'none';$('proxyConfig').style.display=mode==='proxy'?'block':'none';}
-function openSettings(){stopMicGame();playNotice('');engine.setTilt(0);stopRecording(false);$('micMode').value=app.micMode;$('aiMode').value=app.mode;$('aiModel').value=app.model;$('apiUrl').value=app.endpoint;$('apiKey').value=app.apiKey;$('overlay').classList.add('open');formVisibility();}
+function showGeminiStatus(message){const status=$('geminiStatus');status.textContent=message;status.hidden=!message;}
+function openSettings(){stopMicGame();playNotice('');engine.setTilt(0);stopRecording(false);$('micMode').value=app.micMode;$('aiMode').value=app.mode;$('aiModel').value=app.model;$('apiUrl').value=app.endpoint;$('apiKey').value=app.apiKey;showGeminiStatus('');$('overlay').classList.add('open');formVisibility();}
 function closeSettings(){$('overlay').classList.remove('open');}
 $('settingsBtn').addEventListener('click',openSettings);
 $('aiMode').addEventListener('change',formVisibility);
 $('cancelSettings').addEventListener('click',closeSettings);
+$('testGemini').addEventListener('click',async()=>{
+  const button=$('testGemini');
+  const apiKey=$('apiKey').value.trim();
+  const model=$('aiModel').value.trim()||DEFAULT_GEMINI_MODEL;
+  if(!apiKey){showGeminiStatus('Nhập Gemini API key để kiểm tra.');$('apiKey').focus();return;}
+  button.disabled=true;showGeminiStatus('Đang kiểm tra Gemini…');
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),16000);
+  try{
+    await requestGemini(apiKey,model,[{text:'Chào bạn!'}],'Trả lời bằng một lời chào ngắn.',controller.signal);
+    showGeminiStatus(`Gemini đã trả lời với ${model}. Bấm Lưu cài đặt rồi thử micro.`);
+  }catch(e){showGeminiStatus(controller.signal.aborted?'Gemini phản hồi quá lâu. Vui lòng thử lại.':e.message);}
+  finally{clearTimeout(timeout);button.disabled=false;}
+});
 $('saveSettings').addEventListener('click',()=>{
+  const mode=$('aiMode').value;
+  const key=$('apiKey').value.trim();
+  if(mode==='gemini'&&!key){showGeminiStatus('Nhập Gemini API key để lưu cài đặt.');$('apiKey').focus();return;}
+  if(mode==='gemini'&&!storage.setItem(GEMINI_KEY_STORAGE,key)){
+    showGeminiStatus('Trình duyệt không cho phép lưu API key. Hãy mở ứng dụng trong Safari và cho phép lưu dữ liệu trang web.');
+    return;
+  }
   app.micMode=$('micMode').value;storage.setItem('pet-mic-mode',app.micMode);updateMicControl();
-  app.mode=$('aiMode').value;app.model=$('aiModel').value.trim()||'gemini-2.5-flash-lite';app.endpoint=$('apiUrl').value.trim();app.apiKey=$('apiKey').value.trim();
+  app.mode=mode;app.model=$('aiModel').value.trim()||DEFAULT_GEMINI_MODEL;app.endpoint=$('apiUrl').value.trim();
+  if(mode==='gemini')app.apiKey=key;
   storage.setItem('pet-mode',app.mode);storage.setItem('pet-model',app.model);storage.setItem('pet-endpoint',app.endpoint);
+  storage.setItem('pet-model-version','1');
   closeSettings();bubble(app.mode==='demo'?'Đang dùng chế độ thử không cần API!':'Đã lưu cài đặt. Giữ 🎤 để nói nhé!',4200);
 });
 $('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))closeSettings();});
