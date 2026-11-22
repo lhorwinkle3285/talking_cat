@@ -36,6 +36,7 @@ button,input,select{font:inherit} button{cursor:pointer;-webkit-tap-highlight-co
 #appUI{position:fixed;inset:0;z-index:5;pointer-events:none}
 .topbar{position:absolute;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 13px) 16px 0;display:flex;align-items:center;justify-content:flex-end}
 .icon-btn{pointer-events:auto;display:grid;place-items:center;border:none;border-radius:22px;width:51px;height:51px;flex:none;font-size:24px;background:linear-gradient(155deg,#fff,#fff4f5);color:#796184;box-shadow:0 8px 21px #8f688733,inset 0 2px 1px #fff;transition:transform .12s}
+#replayReply{margin-right:9px}#replayReply[hidden]{display:none}
 .icon-btn:active,.feed:active,.sleep:active,.mic:active{transform:scale(.93)}
 #badgeFPS{position:absolute;right:17px;top:calc(env(safe-area-inset-top,0px) + 75px);padding:5px 9px;border-radius:99px;background:#fffcf2af;color:#6a6984;font-size:10px;font-weight:800;border:1px solid #fff9}
 #bubble{position:absolute;top:calc(env(safe-area-inset-top,0px) + 104px);left:50%;transform:translate(-50%,0) scale(.94);width:max-content;max-width:min(83vw,380px);padding:13px 19px;border:2px solid #fff;min-height:42px;text-align:center;background:#fffef3ef;color:#835c7c;font-size:15px;line-height:1.36;letter-spacing:.05px;font-weight:800;box-shadow:0 13px 34px #bd7b9f2c,inset 0 2px #fff;border-radius:24px;transition:opacity .25s,transform .25s;opacity:0;pointer-events:none}
@@ -112,6 +113,7 @@ button,input,select{font:inherit} button{cursor:pointer;-webkit-tap-highlight-co
 <div id="veil"></div>
 <div id="appUI">
   <div class="topbar">
+    <button id="replayReply" class="icon-btn" type="button" aria-label="Nghe lại câu trả lời" title="Nghe lại câu trả lời" hidden>🔊</button>
     <button id="settingsBtn" class="icon-btn" aria-label="Cài đặt của phụ huynh" title="Cài đặt">⚙</button>
   </div>
   <div id="bubble" class="sr-only" aria-live="polite"></div>
@@ -1756,7 +1758,13 @@ function bindInput(cv) {
   }
 }
 function unlock() {
-  ctx(); if (!unlock.d && 'speechSynthesis' in window) { unlock.d = 1; const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); }
+  ctx();
+  if(unlock.d||!window.speechSynthesis||speechSynthesis.pending||navigator.userActivation?.isActive===false)return;
+  const utterance=new SpeechSynthesisUtterance('Chào');
+  utterance.lang='vi-VN';
+  utterance.volume=0;
+  utterance.onstart=()=>{unlock.d=true;};
+  speechSynthesis.speak(utterance);
 }
 
 /* ================= VÒNG LẶP RENDER (tự dừng khi ẩn app / khoá màn hình) ================= */
@@ -2036,24 +2044,55 @@ if(window.speechSynthesis){refreshVoices();if(speechSynthesis.addEventListener)s
 let ttsGuard=0, ttsBegin=0;
 function stopSpeech(){
   app.speechToken++;clearTimeout(ttsGuard);clearTimeout(ttsBegin);
-  try{speechSynthesis.cancel();}catch(e){}
+  $('replayReply').hidden=true;
+  try{if(speechSynthesis.speaking||speechSynthesis.pending)speechSynthesis.cancel();}catch(e){}
   speakingNow=false;engine.set('speaking',false);
 }
-function speak(text){
+function speak(text,usePreferredVoice=true){
   const content=String(text).replace(/\[[^\]]+\]/g,'').trim();if(!content)return;
   lastSpoken=content;stopSpeech();
   if(!window.speechSynthesis){bubble(content,6500);return;}
   const token=app.speechToken;
-  let u=new SpeechSynthesisUtterance(content);u.lang='vi-VN';
-  refreshVoices();if(voiceVI)u.voice=voiceVI;
-  u.pitch=1.12;u.rate=.92;u.volume=1;
-  const begin=()=>{if(token!==app.speechToken)return;speakingNow=true;engine.set('speaking',true);};
-  const done=()=>{if(token!==app.speechToken)return;clearTimeout(ttsGuard);clearTimeout(ttsBegin);speakingNow=false;engine.set('speaking',false);};
-  u.onstart=begin;u.onboundary=()=>{begin();engine.pulse();};u.onend=done;u.onerror=done;
-  // Safari có trường hợp thiếu onboundary: engine tự nhép miệng theo nhịp khi speaking.
-  ttsBegin=setTimeout(begin,450);ttsGuard=setTimeout(done,Math.max(3500,content.length*175+2300));
-  try{speechSynthesis.speak(u);}catch(e){done();bubble('Không phát được giọng nói trên thiết bị này.');}
+  refreshVoices();
+  function play(voice){
+    const utterance=new SpeechSynthesisUtterance(content);
+    utterance.lang='vi-VN';
+    if(voice)utterance.voice=voice;
+    utterance.pitch=1.12;
+    utterance.rate=.92;
+    let started=false;
+    const done=()=>{
+      if(token!==app.speechToken)return;
+      clearTimeout(ttsGuard);clearTimeout(ttsBegin);
+      speakingNow=false;engine.set('speaking',false);
+    };
+    const failed=()=>{
+      if(token!==app.speechToken)return;
+      done();
+      $('replayReply').hidden=false;
+      playNotice('Chạm 🔊 để nghe câu trả lời.',5000);
+    };
+    utterance.onstart=()=>{
+      if(token!==app.speechToken)return;
+      started=true;
+      clearTimeout(ttsBegin);
+      speakingNow=true;engine.set('speaking',true);
+    };
+    utterance.onboundary=()=>{if(token===app.speechToken)engine.pulse();};
+    utterance.onend=()=>{if(started)done();else failed();};
+    utterance.onerror=event=>{
+      if(token!==app.speechToken)return;
+      if(voice&&!started&&['voice-unavailable','language-unavailable','synthesis-unavailable','synthesis-failed','network'].includes(event.error)){
+        done();play(null);
+      }else failed();
+    };
+    ttsBegin=setTimeout(failed,4000);
+    ttsGuard=setTimeout(done,Math.max(5500,content.length*175+2300));
+    try{speechSynthesis.resume();speechSynthesis.speak(utterance);}catch{failed();}
+  }
+  play(usePreferredVoice?voiceVI:null);
 }
+$('replayReply').addEventListener('click',()=>speak(lastSpoken,false));
 
 // Gửi WAV để dùng cùng một định dạng trên các trình duyệt.
 async function encodeVoiceClip(blob){
@@ -2281,7 +2320,11 @@ function updateMicControl() {
 }
 const mic=$('micBtn');
 mic.addEventListener('pointerdown',e=>{e.preventDefault();mic.setPointerCapture?.(e.pointerId);pressMic();});
-mic.addEventListener('pointerup',e=>{e.preventDefault();releaseMic(true);});
+mic.addEventListener('pointerup',e=>{
+  e.preventDefault();
+  releaseMic(true);
+  if(app.micMode==='talk')engine.unlock();
+});
 mic.addEventListener('pointercancel',()=>releaseMic(false));
 mic.addEventListener('lostpointercapture',()=>releaseMic(true));
 mic.addEventListener('contextmenu',e=>e.preventDefault());
