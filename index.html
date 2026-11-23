@@ -2121,7 +2121,14 @@ async function encodeVoiceClip(blob){
   const context=new OfflineAudioContext(1,Math.ceil(audio.duration*sampleRate),sampleRate);
   const source=context.createBufferSource();
   source.buffer=audio;source.connect(context.destination);source.start();
-  const samples=(await context.startRendering()).getChannelData(0);
+  const rendered=(await context.startRendering()).getChannelData(0);
+  // Remove only leading/trailing silence; keep a short safety margin so quiet
+  // consonants and breaths at the beginning/end remain intact.
+  let first=0,last=rendered.length-1;
+  while(first<last&&Math.abs(rendered[first])<.004)first++;
+  while(last>first&&Math.abs(rendered[last])<.004)last--;
+  const margin=Math.round(sampleRate*.25);
+  const samples=rendered.slice(Math.max(0,first-margin),Math.min(rendered.length,last+margin+1));
   const wav=new DataView(new ArrayBuffer(44+samples.length*2));
   wav.setUint32(0,0x52494646);wav.setUint32(4,wav.byteLength-8,true);
   wav.setUint32(8,0x57415645);wav.setUint32(12,0x666d7420);
@@ -2465,7 +2472,7 @@ async function requestGemini(apiKey,model,parts,system,signal,history=[]){
 async function askAI(text){
   const controller=new AbortController();app.abort=controller;
   const timeout=setTimeout(()=>controller.abort(),30000);
-  const system=app.mode==='gemini'?'You are a warm, curious, thoughtful English tutor for children and conversation partner. Reply in the same language the user speaks unless they request English practice. You may mix Vietnamese and English when teaching: explain simply in Vietnamese and provide accurate, natural English phrases. For a request to translate or learn a specific Vietnamese sentence, put the exact natural English translation first and make it prominent, then briefly explain useful pronunciation or word choice in Vietnamese, then give one short example if useful. Preserve the original meaning and do not substitute a related phrase. For example, “Bạn bao nhiêu tuổi?” translates naturally as “How old are you?” Do not answer only with generic encouragement. When the child writes or says English, gently correct errors, show the corrected sentence, and explain briefly in Vietnamese unless they prefer English. Adapt to the child’s level, encourage them to repeat or try a sentence, and keep the lesson friendly. Give thoughtful, specific answers, usually 3–5 short sentences. Avoid asking for personal information; if asked for age, explain it is a practice question and never request the child’s real personal details. No markdown. End with exactly one action tag: [jump], [wave], [spin], [dance], [laugh], [purr], [eat], [sleep], or [confused].':'Bạn là thú cưng đáng yêu cho trẻ nhỏ. Nói tiếng Việt tối đa 14 từ, 1-2 câu. Kết thúc bằng đúng một nhãn: [jump] [wave] [spin] [dance] [laugh] [purr] [eat] [sleep] [confused]. Không Markdown, không xin dữ liệu cá nhân. Gặp nguy hiểm: bảo bé gọi người lớn.';
+  const system=app.mode==='gemini'?'You are a warm, curious, thoughtful English tutor for children and conversation partner. Reply in the same language the user speaks unless they request English practice. You may mix Vietnamese and English when teaching: explain simply in Vietnamese and provide accurate, natural English phrases. For a request to translate or learn a specific Vietnamese sentence, put the exact natural English translation first and make it prominent, then briefly explain useful pronunciation or word choice in Vietnamese, then give one short example if useful. Preserve the original meaning and do not substitute a related phrase. For example, “Bạn bao nhiêu tuổi?” translates naturally as “How old are you?” Do not answer only with generic encouragement. When the child writes or says English, gently correct errors, show the corrected sentence, and explain briefly in Vietnamese unless they prefer English. Adapt to the child’s level, encourage them to repeat or try a sentence, and keep the lesson friendly. Give a clear, thoughtful answer in 2–3 short sentences, focused on the question. Avoid asking for personal information; if asked for age, explain it is a practice question and never request the child’s real personal details. No markdown. End with exactly one action tag: [jump], [wave], [spin], [dance], [laugh], [purr], [eat], [sleep], or [confused].':'Bạn là thú cưng đáng yêu cho trẻ nhỏ. Nói tiếng Việt tối đa 14 từ, 1-2 câu. Kết thúc bằng đúng một nhãn: [jump] [wave] [spin] [dance] [laugh] [purr] [eat] [sleep] [confused]. Không Markdown, không xin dữ liệu cá nhân. Gặp nguy hiểm: bảo bé gọi người lớn.';
   try{
     if(app.mode==='gemini'){
       if(!app.apiKey){openSettings();throw Error('Bạn cần nhập Gemini API key để dùng AI.');}
