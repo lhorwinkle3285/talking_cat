@@ -1111,7 +1111,7 @@ function playSfx(n) {                 // ưu tiên SFX riêng của nhân vật 
 
 /* ================= STATE ================= */
 const HAPPY = new Set(['celebrate', 'purr', 'wave', 'jump', 'spin', 'eat', 'feetHop', 'laugh']);
-const F = { sleeping: false, listening: false, speaking: false };   // cờ trạng thái nền
+const F = { sleeping: false, listening: false, speaking: false, processing: false };   // cờ trạng thái nền
 const H = {};                                                        // hooks gắn từ ngoài: hold, holdEnd, pause, resume
 let renderer, scene, camera, wrapper, cfg, CHARS, rig = null, T = 0, lastActive = 0, lastYawn = -20, nextBlink = 2, blinkT = 9, nextZ = 0, lipBoost = 0, analyser = null, yR = [0, 3.4];
 let layers = [];
@@ -1125,7 +1125,7 @@ function go(name, force) {
   if (tp && tp.n === name && a.loop) return;
   layers.push({ n: name, a, c: rig.comp[name], t: 0, w: layers.length ? .01 : 1, i: 0, cyc: 0 }); if (layers.length > 4) layers.shift();
 }
-function set(k, v) { F[k] = v; if (rig && (v || (top() && top().a.loop))) go(rest(), true); }
+function set(k, v) { F[k] = v; if(k==='processing')return; if (rig && (v || (top() && top().a.loop))) go(rest(), true); }
 function poke() { lastActive = T; lastYawn = T - 20; }
 function wake() {
   const sleeping = F.sleeping;
@@ -1213,7 +1213,7 @@ function update(dt) {
   }
   if (!tp.a.loop && tp.t >= tp.a.dur) go(rest(), true);
   const idle = T - lastActive;
-  if (idle >= 5 && tp.n === 'idle' && !F.sleeping && !F.listening && !F.speaking) {
+  if (idle >= 5 && tp.n === 'idle' && !F.sleeping && !F.listening && !F.speaking && !F.processing) {
     const playful = ['wave','jump','celebrate','spin','laugh','purr'];
     go(playful[Math.floor(Math.random()*playful.length)], true);
     poke();
@@ -2055,17 +2055,19 @@ function findEnglishVoice(){
 function refreshVoices(){voiceVI=findVietnameseVoice();voiceEN=findEnglishVoice();}
 if(window.speechSynthesis){refreshVoices();if(speechSynthesis.addEventListener)speechSynthesis.addEventListener('voiceschanged',refreshVoices);else speechSynthesis.onvoiceschanged=refreshVoices;
   [150,450,1000,2300].forEach(t=>setTimeout(refreshVoices,t));}
-let ttsGuard=0, ttsBegin=0;
+let ttsGuard=0, ttsBegin=0, speechCompletion=null;
 function stopSpeech(){
   app.speechToken++;clearTimeout(ttsGuard);clearTimeout(ttsBegin);
   $('replayReply').hidden=true;
   try{if(speechSynthesis.speaking||speechSynthesis.pending)speechSynthesis.cancel();}catch(e){}
   speakingNow=false;engine.set('speaking',false);
+  const completion=speechCompletion;speechCompletion=null;completion?.(false);
 }
-function speak(text,usePreferredVoice=true){
+function speak(text,usePreferredVoice=true,onComplete=null){
   const content=String(text).replace(/\[[^\]]+\]/g,'').trim();if(!content)return;
   lastSpoken=content;stopSpeech();
-  if(!window.speechSynthesis){bubble(content,6500);return;}
+  speechCompletion=onComplete;
+  if(!window.speechSynthesis){bubble(content,6500);const completion=speechCompletion;speechCompletion=null;completion?.(false);return;}
   const token=app.speechToken;
   refreshVoices();
   const sentences=app.mode==='gemini'?(content.match(/[^.!?]+[.!?]+|[^.!?]+$/gu)||[content]).map(s=>s.trim()).filter(Boolean):[content];
@@ -2075,10 +2077,12 @@ function speak(text,usePreferredVoice=true){
       if(token!==app.speechToken)return;
       clearTimeout(ttsGuard);clearTimeout(ttsBegin);
       speakingNow=false;engine.set('speaking',false);
+      const completion=speechCompletion;speechCompletion=null;completion?.(true);
     };
     const failed=()=>{
       if(token!==app.speechToken||cancelled)return;
-      done();
+      clearTimeout(ttsGuard);clearTimeout(ttsBegin);speakingNow=false;engine.set('speaking',false);
+      const completion=speechCompletion;speechCompletion=null;completion?.(false);
       $('replayReply').hidden=false;
       playNotice('Chạm loa để nghe câu trả lời.',5000);
     };
@@ -2515,7 +2519,7 @@ async function handleVoice(text){
   engine.poke();const q=typeof text==='string'?text.toLowerCase():'';
   if(/cho .*ăn|ăn cá|thả cá|đói|cho ăn/.test(q)){engine.feed();bubble('Có cá ngon rồi! 🐟');excite(6600);return;}
   if(/ngủ đi|đi ngủ|ngủ thôi|đi ngủ nào/.test(q)){engine.sleep();bubble('Ngủ ngon nhé! 🌙');return;}
-  app.busy=true;const petAtStart=petKey;
+  app.busy=true;engine.set('processing',true);const petAtStart=petKey;
   bubble(app.mode==='demo'?'Để mình kể bạn nghe nha!':'Mình đang nghĩ… ✨',0);
   try{
     const result=app.mode==='demo'?demoReply(text):await askAI(text);
@@ -2523,11 +2527,14 @@ async function handleVoice(text){
     const reply=shortReply(result.reply||'Mình chưa nghe rõ. Bạn nói lại nha!');
     const action=result.action||(/vui|giỏi|yêu|hihi/i.test(reply)?'celebrate':'wave');
     bubble(reply,Math.min(10500,3200+reply.length*72));
-    if(action==='eat'){engine.feed();excite(6600);}else if(action==='sleep'){engine.sleep();}
-    else {engine.go(action,true);if(['celebrate','jump','purr'].includes(action))excite();}
-    speak(reply);
-  }catch(err){if(err.name!=='AbortError')bubble(err.message,8000);else bubble('Hơi lâu rồi, bạn thử lại nha!');engine.go('confused',true);}
-  finally{app.busy=false;}
+    speak(reply,true,completed=>{
+      engine.set('processing',false);
+      if(!completed)return;
+      if(action==='eat'){engine.feed();excite(6600);}else if(action==='sleep'){engine.sleep();}
+      else {engine.go(action,true);if(['celebrate','jump','purr'].includes(action))excite();}
+    });
+  }catch(err){if(err.name!=='AbortError')bubble(err.message,8000);else bubble('Hơi lâu rồi, bạn thử lại nha!');engine.set('processing',false);engine.go('confused',true);}
+  finally{app.busy=false;if(!speechCompletion)engine.set('processing',false);}
 }
 
 function formVisibility(){const mode=$('aiMode').value;$('geminiConfig').style.display=mode==='gemini'?'block':'none';$('proxyConfig').style.display=mode==='proxy'?'block':'none';}
