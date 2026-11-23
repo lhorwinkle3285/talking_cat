@@ -1846,7 +1846,7 @@ const app = {
   busy:false, speechToken:0, abort:null, history:[]
 };
 let bubbleClock=0, excitementClock=0, lastTouchVoice=0, lastSpoken='', recognizer=null;
-let micDown=false, released=false, spokenText='', recHasError=false, speakingNow=false, voiceVI=null, voiceEN=null, releaseTimer=0;
+let micDown=false, released=false, spokenText='', recHasError=false, speakingNow=false, voiceVI=null, voiceEN=null;
 let audioClip=null;
 const RECOGNITION=window.SpeechRecognition || window.webkitSpeechRecognition;
 function b64(blob){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]||'');reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob);});}
@@ -2118,7 +2118,7 @@ $('replayReply').addEventListener('click',()=>speak(lastSpoken,false));
 async function encodeVoiceClip(blob){
   const audio=await engine.ctx.decodeAudioData(await blob.arrayBuffer());
   const sampleRate=16000;
-  const context=new OfflineAudioContext(1,Math.min(sampleRate*8,Math.ceil(audio.duration*sampleRate)),sampleRate);
+  const context=new OfflineAudioContext(1,Math.ceil(audio.duration*sampleRate),sampleRate);
   const source=context.createBufferSource();
   source.buffer=audio;source.connect(context.destination);source.start();
   const samples=(await context.startRendering()).getChannelData(0);
@@ -2144,8 +2144,7 @@ async function startAudioClip(){
     recorder.ondataavailable=e=>{if(e.data.size)clip.chunks.push(e.data);};
     recorder.onerror=()=>{if(audioClip===clip){stopRecording(false);bubble('Ghi âm bị lỗi.');}};
     recorder.onstop=async()=>{
-      clearTimeout(clip.timer);cancelAnimationFrame(clip.vadFrame);stream.getTracks().forEach(t=>t.stop());
-      try{clip.audioContext?.close();}catch{}
+      stream.getTracks().forEach(t=>t.stop());
       if(audioClip!==clip||!clip.send)return;
       try{
         if(!clip.chunks.length){bubble('Bạn thử giữ nút 🎤 và nói lâu hơn nhé.');return;}
@@ -2156,28 +2155,6 @@ async function startAudioClip(){
     };
     recorder.start();
     setMicUI(true);bubble('Mình đang nghe bạn nói…',0);
-    clip.timer=setTimeout(()=>stopRecording(true),20000);
-    // Detect the end of a spoken turn from the microphone stream, so the child
-    // can talk naturally and the recording submits after about two seconds quiet.
-    const AudioContextClass=window.AudioContext||window.webkitAudioContext;
-    if(AudioContextClass){
-      clip.audioContext=new AudioContextClass();clip.hasVAD=true;
-      const source=clip.audioContext.createMediaStreamSource(stream),analyser=clip.audioContext.createAnalyser();
-      analyser.fftSize=1024;source.connect(analyser);
-      const samples=new Float32Array(analyser.fftSize);
-      let startedAt=performance.now(),speechAt=0,quietAt=0;
-      const detect=()=>{
-        if(audioClip!==clip||recorder.state!=='recording')return;
-        analyser.getFloatTimeDomainData(samples);let sum=0;
-        for(let i=0;i<samples.length;i++)sum+=samples[i]*samples[i];
-        const rms=Math.sqrt(sum/samples.length),now=performance.now();
-        if(rms>.018){speechAt=speechAt||now;quietAt=0;}
-        else if(speechAt){quietAt=quietAt||now;if(now-quietAt>=1000){stopRecording(true);return;}}
-        else if(now-startedAt>7000){stopRecording(false);bubble('Mình chưa nghe thấy lời nói. Thử bấm mic rồi nói nhé.');return;}
-        clip.vadFrame=requestAnimationFrame(detect);
-      };
-      clip.vadFrame=requestAnimationFrame(detect);
-    }
   }catch(e){
     if(audioClip!==clip)return;
     stopRecording(false);
@@ -2197,7 +2174,7 @@ function startRecording(){
   engine.unlock();stopSpeech();app.abort?.abort();app.abort=null;app.busy=false;
   if(app.mode==='gemini'&&window.MediaRecorder&&navigator.mediaDevices?.getUserMedia&&window.OfflineAudioContext){startAudioClip();return;}
   if(!RECOGNITION){micDown=false;setMicUI(false);bubble('Trình duyệt này chưa hỗ trợ nhận dạng giọng nói. Dùng Safari hoặc bật Gemini trong cài đặt phụ huynh.',6200);engine.playSfx('hmm');speak('Bé nhờ người lớn mở micro giúp nhé!');return;}
-  const r=new RECOGNITION();recognizer=r;r.lang='vi-VN';r.continuous=false;r.interimResults=true;r.maxAlternatives=1;
+  const r=new RECOGNITION();recognizer=r;r.lang='vi-VN';r.continuous=true;r.interimResults=true;r.maxAlternatives=1;
   r.onresult=e=>{let phrase='';for(const item of e.results)phrase+=(item[0]?.transcript||'')+' ';spokenText=phrase.trim();if(spokenText)bubble('🎧 '+spokenText,0);};
   r.onerror=e=>{if(recognizer!==r)return;recHasError=true;
     if(e.error==='aborted')return;
@@ -2213,11 +2190,10 @@ function startRecording(){
   catch(e){recognizer=null;micDown=false;setMicUI(false);bubble('Không bật được micro: '+e.message,5000);}
 }
 function stopRecording(send=true){
-  clearTimeout(releaseTimer);
   if(audioClip){
     const clip=audioClip;
     if(send&&!micDown)return;
-    micDown=false;setMicUI(false);clearTimeout(clip.timer);
+    micDown=false;setMicUI(false);
     clip.send=send&&clip.recorder?.state==='recording';
     if(!clip.send)audioClip=null;
     if(clip.recorder?.state==='recording')clip.recorder.stop();
@@ -2231,7 +2207,6 @@ function stopRecording(send=true){
   if(!r){if(send && spokenText && !recHasError){const text=spokenText;spokenText='';handleVoice(text);}return;}
   try{send?r.stop():r.abort();}catch(e){recognizer=null;}
 }
-function finishTalkAfterPause(){clearTimeout(releaseTimer);releaseTimer=setTimeout(()=>{if(!audioClip?.hasVAD)stopRecording(true);},1000);}
 /* ================= TRÒ CHƠI MICRO (XỬ LÝ TẠI CHỖ) ================= */
 let micGame = null, echoSource = null;
 function stopMicGame(send = false) {
@@ -2345,12 +2320,12 @@ async function startMicGame() {
 function pressMic() {
   if (app.micMode === 'talk') {
     if(micDown&&audioClip){stopRecording(true);return;}
-    clearTimeout(releaseTimer);stopMicGame();startRecording();
+    stopMicGame();startRecording();
   }
   else startMicGame();
 }
 function releaseMic(send) {
-  if (app.micMode === 'talk') {if(send){if(!audioClip?.hasVAD)finishTalkAfterPause();}else{clearTimeout(releaseTimer);stopRecording(false);}}
+  if (app.micMode === 'talk') stopRecording(send);
   else if (micGame && (!micGame.send || !send)) {
     const wasPending = !micGame.stream;
     stopMicGame(send && app.micMode === 'echo');
