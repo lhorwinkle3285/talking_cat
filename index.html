@@ -2033,9 +2033,10 @@ function findVietnameseVoice(){
   const voices=speechSynthesis.getVoices().filter(voice=>/^vi(?:[-_]|$)/i.test(voice.lang));
   const score=voice=>{
     const label=`${voice.name} ${voice.voiceURI}`;
-    const male=/\b(?:namminh|nam minh|male)\b/i.test(label)||/\bnam$/i.test(voice.name);
+    const female=/\b(?:female|woman|linh|hoai ?my|hoai ?mi|mai|thuy|thuỳ|lan|ngoc|ngọc|google vietnamese female)\b/i.test(label);
+    const male=/\b(?:namminh|nam minh|male|an ?dung|an ?dũng)\b/i.test(label)||/\bnam$/i.test(voice.name);
     const vietnam=/^vi[-_]VN$/i.test(voice.lang);
-    return (male?16:0)+(vietnam?8:0)+(voice.default?2:0)+(voice.localService?1:0);
+    return (female?18:0)-(male?12:0)+(vietnam?8:0)+(voice.localService?2:0)+(voice.default?1:0);
   };
   return voices.sort((a,b)=>score(b)-score(a))[0]||null;
 }
@@ -2070,7 +2071,7 @@ function speak(text,usePreferredVoice=true){
     const utterance=new SpeechSynthesisUtterance(content);
     const english=app.mode==='gemini'&&/^[\x00-\x7F]*$/.test(content);utterance.lang=english?'en-US':'vi-VN';
     if(voice)utterance.voice=voice;
-    utterance.pitch=1.48;
+    utterance.pitch=english?1.35:1.08;
     utterance.rate=.96;
     let started=false;
     const done=()=>{
@@ -2165,7 +2166,7 @@ async function startAudioClip(){
         for(let i=0;i<samples.length;i++)sum+=samples[i]*samples[i];
         const rms=Math.sqrt(sum/samples.length),now=performance.now();
         if(rms>.018){speechAt=speechAt||now;quietAt=0;}
-        else if(speechAt){quietAt=quietAt||now;if(now-quietAt>=2000){stopRecording(true);return;}}
+        else if(speechAt){quietAt=quietAt||now;if(now-quietAt>=1000){stopRecording(true);return;}}
         else if(now-startedAt>7000){stopRecording(false);bubble('Mình chưa nghe thấy lời nói. Thử bấm mic rồi nói nhé.');return;}
         clip.vadFrame=requestAnimationFrame(detect);
       };
@@ -2224,7 +2225,7 @@ function stopRecording(send=true){
   if(!r){if(send && spokenText && !recHasError){const text=spokenText;spokenText='';handleVoice(text);}return;}
   try{send?r.stop():r.abort();}catch(e){recognizer=null;}
 }
-function finishTalkAfterPause(){clearTimeout(releaseTimer);releaseTimer=setTimeout(()=>{if(!audioClip?.hasVAD)stopRecording(true);},2000);}
+function finishTalkAfterPause(){clearTimeout(releaseTimer);releaseTimer=setTimeout(()=>{if(!audioClip?.hasVAD)stopRecording(true);},1000);}
 /* ================= TRÒ CHƠI MICRO (XỬ LÝ TẠI CHỖ) ================= */
 let micGame = null, echoSource = null;
 function stopMicGame(send = false) {
