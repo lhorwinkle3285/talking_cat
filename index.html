@@ -154,10 +154,10 @@ button,input,select{font:inherit} button{cursor:pointer;-webkit-tap-highlight-co
       <input id="apiUrl" placeholder="https://example.com/api/pet" inputmode="url" autocomplete="off">
     </div>
     <div id="debugInfo" class="notice">Chỉ số FPS hiển thị ở đây khi ứng dụng đang chạy.</div>
-    <div class="notice">🔒 Chỉ dùng API key trực tiếp để thử trên máy cá nhân. Chế độ Gemini gửi tối đa 8 giây ghi âm cho Google để nhận câu trả lời. Micro cần HTTPS hoặc localhost và quyền truy cập.</div>
+    <div class="notice">🔒 Chỉ dùng API key trực tiếp để thử trên máy cá nhân. Chế độ Gemini gửi đoạn ghi âm cho Google để nhận câu trả lời; micro cần HTTPS hoặc localhost và quyền truy cập.</div>
     <label for="micMode">Trò chơi micro</label>
     <select id="micMode"><option value="talk">Trò chuyện</option><option value="echo">Giọng nhại (3 giây)</option><option value="blow">Thổi chong chóng</option></select>
-    <div class="setting-actions"><button type="button" id="motionBtn">Bật nghiêng và lắc máy</button></div>
+    <div class="setting-actions" hidden><button type="button" id="motionBtn">Bật nghiêng và lắc máy</button></div>
     <div class="setting-actions"><button id="cancelSettings" class="cancel">Đóng</button><button id="saveSettings">Lưu cài đặt</button></div>
   </div>
 </div>
@@ -1213,8 +1213,11 @@ function update(dt) {
   }
   if (!tp.a.loop && tp.t >= tp.a.dur) go(rest(), true);
   const idle = T - lastActive;
-  if (tp.n === 'idle' && idle > 10 && T - lastYawn > 20) { lastYawn = T; go('yawn'); }                         // ngáp sau 10s
-  if (idle >= 13 && tp.n === 'idle' && !F.sleeping && !F.listening && !F.speaking) { F.sleeping = true; go('sleep', true); }      // ngủ sau 60s
+  if (idle >= 5 && tp.n === 'idle' && !F.sleeping && !F.listening && !F.speaking) {
+    const playful = ['wave','jump','celebrate','spin','laugh','purr'];
+    go(playful[Math.floor(Math.random()*playful.length)], true);
+    poke();
+  }
   layers = layers.filter(L => L === top() || L.w > .01);
   // --- Trộn pose: final = rest + Σ w·(giá trị − mặc định) / Σ w ---
   const acc = rig.acc, CH = rig.CH; acc.fill(0); let sw = 0;
@@ -1840,10 +1843,10 @@ const app = {
   model: !storage.getItem('pet-model-version') && savedModel === 'gemini-2.5-flash-lite' ? DEFAULT_GEMINI_MODEL : savedModel || DEFAULT_GEMINI_MODEL,
   endpoint: storage.getItem('pet-endpoint') || '',
   apiKey: storage.getItem(GEMINI_KEY_STORAGE) || '',
-  busy:false, speechToken:0, abort:null
+  busy:false, speechToken:0, abort:null, history:[]
 };
 let bubbleClock=0, excitementClock=0, lastTouchVoice=0, lastSpoken='', recognizer=null;
-let micDown=false, released=false, spokenText='', recHasError=false, speakingNow=false, voiceVI=null;
+let micDown=false, released=false, spokenText='', recHasError=false, speakingNow=false, voiceVI=null, voiceEN=null, releaseTimer=0;
 let audioClip=null;
 const RECOGNITION=window.SpeechRecognition || window.webkitSpeechRecognition;
 function b64(blob){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]||'');reader.onerror=()=>reject(reader.error);reader.readAsDataURL(blob);});}
@@ -1989,6 +1992,7 @@ async function switchPet(key){
   stopMicGame(); playNotice('');
   stopSpeech(); stopRecording(false); app.abort?.abort();app.abort=null;app.busy=false;
   petKey=key;storage.setItem('pet-kind',key);
+  app.history=[];
   renderTray(key);
   for(const btn of document.querySelectorAll('.zodiac-item')){btn.classList.toggle('active',btn.dataset.pet===key);btn.setAttribute('aria-pressed',String(btn.dataset.pet===key));}
   const active=$('zodiacStrip').querySelector('.zodiac-item.active');active?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
@@ -2035,7 +2039,18 @@ function findVietnameseVoice(){
   };
   return voices.sort((a,b)=>score(b)-score(a))[0]||null;
 }
-function refreshVoices(){voiceVI=findVietnameseVoice();}
+function findEnglishVoice(){
+  if(!window.speechSynthesis)return null;
+  const voices=speechSynthesis.getVoices().filter(voice=>/^en(?:[-_]|$)/i.test(voice.lang));
+  const female=/\b(samantha|jenny|aria|ava|sara|sarah|june|emma|olivia|sophie|zira|victoria|karen|moira|tessa|female|woman)\b/i;
+  const score=voice=>{
+    const label=`${voice.name} ${voice.voiceURI}`;
+    return (female.test(label)?12:0)+(/^en[-_]US$/i.test(voice.lang)?6:/^en[-_]GB$/i.test(voice.lang)?3:0)
+      +(voice.localService?2:0)+(voice.default?1:0);
+  };
+  return voices.sort((a,b)=>score(b)-score(a))[0]||null;
+}
+function refreshVoices(){voiceVI=findVietnameseVoice();voiceEN=findEnglishVoice();}
 if(window.speechSynthesis){refreshVoices();if(speechSynthesis.addEventListener)speechSynthesis.addEventListener('voiceschanged',refreshVoices);else speechSynthesis.onvoiceschanged=refreshVoices;
   [150,450,1000,2300].forEach(t=>setTimeout(refreshVoices,t));}
 let ttsGuard=0, ttsBegin=0;
@@ -2053,10 +2068,10 @@ function speak(text,usePreferredVoice=true){
   refreshVoices();
   function play(voice){
     const utterance=new SpeechSynthesisUtterance(content);
-    utterance.lang='vi-VN';
+    const english=app.mode==='gemini'&&/^[\x00-\x7F]*$/.test(content);utterance.lang=english?'en-US':'vi-VN';
     if(voice)utterance.voice=voice;
-    utterance.pitch=1.35;
-    utterance.rate=1.05;
+    utterance.pitch=1.48;
+    utterance.rate=.96;
     let started=false;
     const done=()=>{
       if(token!==app.speechToken)return;
@@ -2087,7 +2102,8 @@ function speak(text,usePreferredVoice=true){
     ttsGuard=setTimeout(done,Math.max(5500,content.length*175+2300));
     try{speechSynthesis.resume();speechSynthesis.speak(utterance);}catch{failed();}
   }
-  play(usePreferredVoice?voiceVI:null);
+  const english=app.mode==='gemini'&&/^[\x00-\x7F]*$/.test(content);
+  play(usePreferredVoice?(english?voiceEN:voiceVI):null);
 }
 $('replayReply').addEventListener('click',()=>speak(lastSpoken,false));
 
@@ -2121,7 +2137,8 @@ async function startAudioClip(){
     recorder.ondataavailable=e=>{if(e.data.size)clip.chunks.push(e.data);};
     recorder.onerror=()=>{if(audioClip===clip){stopRecording(false);bubble('Ghi âm bị lỗi.');}};
     recorder.onstop=async()=>{
-      clearTimeout(clip.timer);stream.getTracks().forEach(t=>t.stop());
+      clearTimeout(clip.timer);cancelAnimationFrame(clip.vadFrame);stream.getTracks().forEach(t=>t.stop());
+      try{clip.audioContext?.close();}catch{}
       if(audioClip!==clip||!clip.send)return;
       try{
         if(!clip.chunks.length){bubble('Bạn thử giữ nút 🎤 và nói lâu hơn nhé.');return;}
@@ -2132,7 +2149,28 @@ async function startAudioClip(){
     };
     recorder.start();
     setMicUI(true);bubble('Mình đang nghe bạn nói…',0);
-    clip.timer=setTimeout(()=>stopRecording(true),8000);
+    clip.timer=setTimeout(()=>stopRecording(true),20000);
+    // Detect the end of a spoken turn from the microphone stream, so the child
+    // can talk naturally and the recording submits after about two seconds quiet.
+    const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+    if(AudioContextClass){
+      clip.audioContext=new AudioContextClass();clip.hasVAD=true;
+      const source=clip.audioContext.createMediaStreamSource(stream),analyser=clip.audioContext.createAnalyser();
+      analyser.fftSize=1024;source.connect(analyser);
+      const samples=new Float32Array(analyser.fftSize);
+      let startedAt=performance.now(),speechAt=0,quietAt=0;
+      const detect=()=>{
+        if(audioClip!==clip||recorder.state!=='recording')return;
+        analyser.getFloatTimeDomainData(samples);let sum=0;
+        for(let i=0;i<samples.length;i++)sum+=samples[i]*samples[i];
+        const rms=Math.sqrt(sum/samples.length),now=performance.now();
+        if(rms>.018){speechAt=speechAt||now;quietAt=0;}
+        else if(speechAt){quietAt=quietAt||now;if(now-quietAt>=2000){stopRecording(true);return;}}
+        else if(now-startedAt>7000){stopRecording(false);bubble('Mình chưa nghe thấy lời nói. Thử bấm mic rồi nói nhé.');return;}
+        clip.vadFrame=requestAnimationFrame(detect);
+      };
+      clip.vadFrame=requestAnimationFrame(detect);
+    }
   }catch(e){
     if(audioClip!==clip)return;
     stopRecording(false);
@@ -2168,6 +2206,7 @@ function startRecording(){
   catch(e){recognizer=null;micDown=false;setMicUI(false);bubble('Không bật được micro: '+e.message,5000);}
 }
 function stopRecording(send=true){
+  clearTimeout(releaseTimer);
   if(audioClip){
     const clip=audioClip;
     if(send&&!micDown)return;
@@ -2185,6 +2224,7 @@ function stopRecording(send=true){
   if(!r){if(send && spokenText && !recHasError){const text=spokenText;spokenText='';handleVoice(text);}return;}
   try{send?r.stop():r.abort();}catch(e){recognizer=null;}
 }
+function finishTalkAfterPause(){clearTimeout(releaseTimer);releaseTimer=setTimeout(()=>{if(!audioClip?.hasVAD)stopRecording(true);},2000);}
 /* ================= TRÒ CHƠI MICRO (XỬ LÝ TẠI CHỖ) ================= */
 let micGame = null, echoSource = null;
 function stopMicGame(send = false) {
@@ -2296,11 +2336,14 @@ async function startMicGame() {
   }
 }
 function pressMic() {
-  if (app.micMode === 'talk') { stopMicGame(); startRecording(); }
+  if (app.micMode === 'talk') {
+    if(micDown&&audioClip){stopRecording(true);return;}
+    clearTimeout(releaseTimer);stopMicGame();startRecording();
+  }
   else startMicGame();
 }
 function releaseMic(send) {
-  if (app.micMode === 'talk') stopRecording(send);
+  if (app.micMode === 'talk') {if(send){if(!audioClip?.hasVAD)finishTalkAfterPause();}else{clearTimeout(releaseTimer);stopRecording(false);}}
   else if (micGame && (!micGame.send || !send)) {
     const wasPending = !micGame.stream;
     stopMicGame(send && app.micMode === 'echo');
@@ -2354,6 +2397,18 @@ $('motionBtn').addEventListener('click', async () => {
     }, 2500);
   } finally { control.disabled = false; }
 });
+// Enable tilt and shake automatically; mobile Safari prompts on first gesture.
+function autoEnableMotion(){
+  if(motionEnabled)return;
+  const sensors=[window.DeviceMotionEvent,window.DeviceOrientationEvent].filter(Boolean);
+  if(!sensors.length)return;
+  Promise.allSettled(sensors.map(async sensor=>sensor.requestPermission?.()??'granted')).then(results=>{
+    motionEnabled=results.some(result=>result.status==='fulfilled'&&result.value==='granted');
+    if(motionEnabled)motionProbe=setTimeout(()=>{motionEnabled=false;engine.setTilt(0);},2500);
+  });
+}
+autoEnableMotion();
+document.addEventListener('pointerdown',autoEnableMotion,{once:true,capture:true});
 function canUseMotion() {
   return motionEnabled && !document.hidden && !$('overlay').classList.contains('open')
     && !engine.flags.listening && !engine.flags.speaking && !micGame && !app.busy;
@@ -2381,7 +2436,7 @@ addEventListener('devicemotion', event => {
 });
 
 const ACTIONS={jump:'jump',wave:'wave',spin:'spin',dance:'celebrate',celebrate:'celebrate',happy:'celebrate',eat:'eat',sleep:'sleep',laugh:'laugh',purr:'purr',confused:'confused'};
-function shortReply(s){return String(s||'').replace(/\[[^\]]+\]/g,'').replace(/\s+/g,' ').trim().split(' ').filter(Boolean).slice(0,14).join(' ').slice(0,135);}
+function shortReply(s){const clean=String(s||'').replace(/\[[^\]]+\]/g,'').replace(/\s+/g,' ').trim();return app.mode==='gemini'?clean.split(' ').filter(Boolean).slice(0,90).join(' ').slice(0,650):clean.split(' ').filter(Boolean).slice(0,14).join(' ').slice(0,135);}
 function parseAnswer(raw){const action=(String(raw).match(/\[([\w-]+)\]/)?.[1]||'').toLowerCase();return{reply:shortReply(raw),action:ACTIONS[action]||null};}
 function demoReply(text){
   const q=text.toLowerCase(),p=PETS[petKey];
@@ -2396,13 +2451,13 @@ function demoReply(text){
   if(/đếm/.test(q))return{reply:'Một, hai, ba, bốn, năm! Giỏi quá!',action:'celebrate'};
   return {reply:['Mình đang nghe nè! Bạn kể thêm đi!','Ôi, hay quá! Mình thích chơi cùng bạn!','Mình muốn làm bạn với bạn mãi luôn!'][Math.floor(Math.random()*3)],action:'wave'};
 }
-async function requestGemini(apiKey,model,parts,system,signal){
+async function requestGemini(apiKey,model,parts,system,signal,history=[]){
   if(!apiKey)throw Error('Bạn cần nhập Gemini API key.');
   model=model.replace(/^models\//,'');
   if(!/^[a-zA-Z0-9._-]+$/.test(model))throw Error('Tên model Gemini không hợp lệ.');
-  const generationConfig={temperature:.7,maxOutputTokens:160};
+  const generationConfig={temperature:.75,maxOutputTokens:320};
   if(/^gemini-2\.5-flash/.test(model))generationConfig.thinkingConfig={thinkingBudget:0};
-  const body=JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:'user',parts}],generationConfig});
+  const body=JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[...history,{role:'user',parts}],generationConfig});
   let response;
   try{
     response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{
@@ -2427,16 +2482,21 @@ async function requestGemini(apiKey,model,parts,system,signal){
 }
 async function askAI(text){
   const controller=new AbortController();app.abort=controller;
-  const timeout=setTimeout(()=>controller.abort(),16000);
-  const system='Bạn là thú cưng đáng yêu cho trẻ nhỏ. Nói tiếng Việt tối đa 14 từ, 1-2 câu. Kết thúc bằng đúng một nhãn: [jump] [wave] [spin] [dance] [laugh] [purr] [eat] [sleep] [confused]. Không Markdown, không xin dữ liệu cá nhân. Gặp nguy hiểm: bảo bé gọi người lớn.';
+  const timeout=setTimeout(()=>controller.abort(),30000);
+  const system=app.mode==='gemini'?'You are a warm, curious, thoughtful English tutor for children and conversation partner. Reply in the same language the user speaks unless they request English practice. You may mix Vietnamese and English when teaching: explain simply in Vietnamese and provide accurate, natural English phrases. For a request to translate or learn a specific Vietnamese sentence, put the exact natural English translation first and make it prominent, then briefly explain useful pronunciation or word choice in Vietnamese, then give one short example if useful. Preserve the original meaning and do not substitute a related phrase. For example, “Bạn bao nhiêu tuổi?” translates naturally as “How old are you?” Do not answer only with generic encouragement. When the child writes or says English, gently correct errors, show the corrected sentence, and explain briefly in Vietnamese unless they prefer English. Adapt to the child’s level, encourage them to repeat or try a sentence, and keep the lesson friendly. Give thoughtful, specific answers, usually 3–5 short sentences. Avoid asking for personal information; if asked for age, explain it is a practice question and never request the child’s real personal details. No markdown. End with exactly one action tag: [jump], [wave], [spin], [dance], [laugh], [purr], [eat], [sleep], or [confused].':'Bạn là thú cưng đáng yêu cho trẻ nhỏ. Nói tiếng Việt tối đa 14 từ, 1-2 câu. Kết thúc bằng đúng một nhãn: [jump] [wave] [spin] [dance] [laugh] [purr] [eat] [sleep] [confused]. Không Markdown, không xin dữ liệu cá nhân. Gặp nguy hiểm: bảo bé gọi người lớn.';
   try{
     if(app.mode==='gemini'){
       if(!app.apiKey){openSettings();throw Error('Bạn cần nhập Gemini API key để dùng AI.');}
       const parts=typeof text==='string'?[{text:`${PETS[petKey].name}: ${text.slice(0,220)}`}]:[
-        {text:`Bé nói tiếng Việt với ${PETS[petKey].name}. Phản hồi câu nói trong âm thanh.`},
+        {text:`The user is speaking to ${PETS[petKey].name}. Understand the speech, follow the requested language and role, and reply in the same language unless the user explicitly asks to practice or use another language.`},
         {inlineData:{mimeType:text.mimeType,data:text.data}}
       ];
-      return parseAnswer(await requestGemini(app.apiKey,app.model,parts,system,controller.signal));
+      const raw=await requestGemini(app.apiKey,app.model,parts,system,controller.signal,app.history);
+      const parsed=parseAnswer(raw);
+      // Keep the last few turns in memory so spoken follow-ups have context.
+      // Audio remains only in this page session and is sent again as chat context.
+      app.history=[...app.history,{role:'user',parts},{role:'model',parts:[{text:raw}]}].slice(-4);
+      return parsed;
     }
     if(app.mode==='proxy'){
       if(!/^https:\/\//i.test(app.endpoint))throw Error('Cần địa chỉ API proxy HTTPS.');
@@ -2497,6 +2557,7 @@ $('saveSettings').addEventListener('click',()=>{
     return;
   }
   app.micMode=$('micMode').value;storage.setItem('pet-mic-mode',app.micMode);updateMicControl();
+  if(app.mode!==mode)app.history=[];
   app.mode=mode;app.model=$('aiModel').value.trim()||DEFAULT_GEMINI_MODEL;app.endpoint=$('apiUrl').value.trim();
   if(mode==='gemini')app.apiKey=key;
   storage.setItem('pet-mode',app.mode);storage.setItem('pet-model',app.model);storage.setItem('pet-endpoint',app.endpoint);
