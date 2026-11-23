@@ -2068,44 +2068,45 @@ function speak(text,usePreferredVoice=true){
   if(!window.speechSynthesis){bubble(content,6500);return;}
   const token=app.speechToken;
   refreshVoices();
-  function play(voice){
-    const utterance=new SpeechSynthesisUtterance(content);
-    const english=app.mode==='gemini'&&/^[\x00-\x7F]*$/.test(content);utterance.lang=english?'en-US':'vi-VN';
-    if(voice)utterance.voice=voice;
-    utterance.pitch=english?1.35:1.08;
-    utterance.rate=english ? .96 : .93;
-    let started=false;
+  const sentences=app.mode==='gemini'?(content.match(/[^.!?]+[.!?]+|[^.!?]+$/gu)||[content]).map(s=>s.trim()).filter(Boolean):[content];
+  function play(preferVoices=true){
+    let completed=0,startedAny=false,cancelled=false;
     const done=()=>{
       if(token!==app.speechToken)return;
       clearTimeout(ttsGuard);clearTimeout(ttsBegin);
       speakingNow=false;engine.set('speaking',false);
     };
     const failed=()=>{
-      if(token!==app.speechToken)return;
+      if(token!==app.speechToken||cancelled)return;
       done();
       $('replayReply').hidden=false;
-      playNotice('Chạm 🔊 để nghe câu trả lời.',5000);
+      playNotice('Chạm loa để nghe câu trả lời.',5000);
     };
-    utterance.onstart=()=>{
-      if(token!==app.speechToken)return;
-      started=true;
-      clearTimeout(ttsBegin);
-      speakingNow=true;engine.set('speaking',true);
-    };
-    utterance.onboundary=()=>{if(token===app.speechToken)engine.pulse();};
-    utterance.onend=()=>{if(started)done();else failed();};
-    utterance.onerror=event=>{
-      if(token!==app.speechToken)return;
-      if(voice&&!started&&['voice-unavailable','language-unavailable','synthesis-unavailable','synthesis-failed','network'].includes(event.error)){
-        done();play(null);
-      }else failed();
-    };
+    const utterances=sentences.map(sentence=>{
+      const vietnamese=/[\u00e0\u00e1\u1ea1\u1ea3\u00e3\u00e2\u1ea7\u1ea5\u1ead\u1ea9\u1eab\u0103\u1eb1\u1eaf\u1eb7\u1eb3\u1eb5\u00e8\u00e9\u1eb9\u1ebb\u1ebd\u00ea\u1ec1\u1ebf\u1ec7\u1ec3\u1ec5\u00ec\u00ed\u1ecb\u1ec9\u0129\u00f2\u00f3\u1ecd\u1ecf\u00f5\u00f4\u1ed3\u1ed1\u1ed9\u1ed5\u1ed7\u01a1\u1edd\u1edb\u1ee3\u1edf\u1ee1\u00f9\u00fa\u1ee5\u1ee7\u0169\u01b0\u1eeb\u1ee9\u1ef1\u1eed\u1eef\u00fd\u1ef5\u1ef7\u1ef9\u0111]/i.test(sentence);
+      const english=app.mode==='gemini'&&!vietnamese;
+      const utterance=new SpeechSynthesisUtterance(sentence);
+      utterance.lang=english?'en-US':'vi-VN';
+      if(preferVoices){const voice=english?voiceEN:voiceVI;if(voice)utterance.voice=voice;}
+      utterance.pitch=english?1.35:1.08;
+      utterance.rate=english ? .96 : .93;
+      let started=false;
+      utterance.onstart=()=>{if(token!==app.speechToken||cancelled)return;started=true;startedAny=true;clearTimeout(ttsBegin);speakingNow=true;engine.set('speaking',true);};
+      utterance.onboundary=()=>{if(token===app.speechToken&&!cancelled)engine.pulse();};
+      utterance.onend=()=>{if(token!==app.speechToken||cancelled)return;if(!started){failed();return;}if(++completed===utterances.length)done();};
+      utterance.onerror=event=>{
+        if(token!==app.speechToken||cancelled)return;
+        if(preferVoices&&!started&&!startedAny&&['voice-unavailable','language-unavailable','synthesis-unavailable','synthesis-failed','network'].includes(event.error)){
+          cancelled=true;clearTimeout(ttsGuard);clearTimeout(ttsBegin);speechSynthesis.cancel();play(false);
+        }else failed();
+      };
+      return utterance;
+    });
     ttsBegin=setTimeout(failed,4000);
     ttsGuard=setTimeout(done,Math.max(5500,content.length*175+2300));
-    try{speechSynthesis.resume();speechSynthesis.speak(utterance);}catch{failed();}
+    try{speechSynthesis.resume();utterances.forEach(utterance=>speechSynthesis.speak(utterance));}catch{failed();}
   }
-  const english=app.mode==='gemini'&&/^[\x00-\x7F]*$/.test(content);
-  play(usePreferredVoice?(english?voiceEN:voiceVI):null);
+  play(usePreferredVoice);
 }
 $('replayReply').addEventListener('click',()=>speak(lastSpoken,false));
 
